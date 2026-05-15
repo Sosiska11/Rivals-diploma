@@ -1,0 +1,4421 @@
+привет. мой сайт не работает. посмотри пожалуйста.
+config
+// ========== КОНФИГУРАЦИЯ API ==========
+const API_BASE_URL = 'http://localhost:3001/api';
+console.log('🚀 API Base URL:', API_BASE_URL);
+console.log('📍 Текущий URL:', window.location.href);
+
+// ========== SIMPLE AUTH SERVICE ==========
+class SimpleAuthService {
+    constructor() {
+        this.baseURL = API_BASE_URL;
+        this.token = localStorage.getItem('marvelToken');
+        this.user = null;
+        
+        console.log('✅ AuthService инициализирован:', {
+            baseURL: this.baseURL,
+            hasToken: !!this.token,
+            currentUser: this.getUser()?.username || 'нет'
+        });
+        
+        // Автоматическая проверка токена
+        setTimeout(() => this.verifyToken(), 1000);
+    }
+
+    getHeaders() {
+        const headers = {
+            'Content-Type': 'application/json',
+        };
+        
+        if (this.token) {
+            headers['Authorization'] = `Bearer ${this.token}`;
+        }
+        
+        return headers;
+    }
+
+    async register(userData) {
+        try {
+            console.log('📝 Регистрация:', userData.username);
+            
+            const response = await fetch(`${this.baseURL}/register`, {
+                method: 'POST',
+                headers: this.getHeaders(),
+                body: JSON.stringify(userData)
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('✅ Ответ сервера:', data);
+
+            if (data.status === 'success') {
+                this.token = data.token;
+                this.user = data.user;
+                
+                localStorage.setItem('marvelToken', data.token);
+                localStorage.setItem('marvelUser', JSON.stringify(data.user));
+                
+                // Обновляем UI
+                this.updateAuthUI();
+                
+                return data;
+            } else {
+                throw new Error(data.message || 'Ошибка регистрации');
+            }
+
+        } catch (error) {
+            console.error('❌ Ошибка регистрации:', error);
+            throw error;
+        }
+    }
+
+    async login(credentials) {
+        try {
+            console.log('🔐 Авторизация:', credentials.email);
+            
+            const response = await fetch(`${this.baseURL}/login`, {
+                method: 'POST',
+                headers: this.getHeaders(),
+                body: JSON.stringify(credentials)
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Ошибка входа');
+            }
+
+            if (data.status === 'success') {
+                this.token = data.token;
+                this.user = data.user;
+                
+                localStorage.setItem('marvelToken', data.token);
+                localStorage.setItem('marvelUser', JSON.stringify(data.user));
+                
+                // Обновляем UI
+                this.updateAuthUI();
+                
+                return data;
+            } else {
+                throw new Error(data.message || 'Ошибка входа');
+            }
+
+        } catch (error) {
+            console.error('❌ Ошибка авторизации:', error);
+            throw error;
+        }
+    }
+
+    async verifyToken() {
+        if (!this.token) return false;
+
+        try {
+            const response = await fetch(`${this.baseURL}/verify-token`, {
+                headers: this.getHeaders()
+            });
+
+            if (!response.ok) {
+                this.logout();
+                return false;
+            }
+
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                this.user = data.user;
+                this.updateAuthUI();
+                return true;
+            } else {
+                this.logout();
+                return false;
+            }
+
+        } catch (error) {
+            console.error('❌ Ошибка проверки токена:', error);
+            this.logout();
+            return false;
+        }
+    }
+
+    logout() {
+        console.log('🚪 Выход из системы');
+        this.token = null;
+        this.user = null;
+        localStorage.removeItem('marvelToken');
+        localStorage.removeItem('marvelUser');
+        
+        // Очищаем избранное
+        if (window.favoritesManager) {
+            window.favoritesManager.clearFavorites();
+        }
+        
+        this.updateAuthUI();
+    }
+
+    getUser() {
+        if (!this.user) {
+            const savedUser = localStorage.getItem('marvelUser');
+            if (savedUser) {
+                try {
+                    this.user = JSON.parse(savedUser);
+                } catch(e) {
+                    localStorage.removeItem('marvelUser');
+                }
+            }
+        }
+        return this.user;
+    }
+
+    isAuthenticated() {
+        return !!this.token && !!this.getUser();
+    }
+
+    updateAuthUI() {
+        const loginBtn = document.getElementById('openLoginBtn');
+        const registerBtn = document.getElementById('openModalBtn');
+        
+        if (!loginBtn) return;
+        
+        const user = this.getUser();
+        
+        if (user) {
+            // Пользователь авторизован
+            loginBtn.innerHTML = `👤 ${user.username}`;
+            loginBtn.onclick = () => {
+                if (confirm(`Выйти из аккаунта ${user.username}?`)) {
+                    this.logout();
+                }
+            };
+            loginBtn.title = 'Выйти из аккаунта';
+            
+            if (registerBtn) {
+                registerBtn.style.display = 'none';
+            }
+        } else {
+            // Гость
+            loginBtn.innerHTML = 'Войти';
+            loginBtn.onclick = () => {
+                if (typeof openLoginModal === 'function') {
+                    openLoginModal();
+                } else {
+                    console.warn('Функция openLoginModal не найдена');
+                    // Альтернатива - показать alert
+                    alert('Функция входа временно недоступна');
+                }
+            };
+            loginBtn.title = 'Войти в аккаунт';
+            
+            if (registerBtn) {
+                registerBtn.style.display = 'block';
+            }
+        }
+    }
+}
+
+// ========== FAVORITES MANAGER ==========
+class FavoritesManager {
+    constructor() {
+        this.baseURL = API_BASE_URL;
+        this.favorites = new Set();
+        console.log('⭐ FavoritesManager инициализирован');
+    }
+
+    isUserAuthenticated() {
+        return window.authService && window.authService.isAuthenticated();
+    }
+
+    getUserToken() {
+        return window.authService?.token || localStorage.getItem('marvelToken');
+    }
+
+    async loadFavoritesFromDB() {
+        if (!this.isUserAuthenticated()) {
+            console.log('⚠️ Пользователь не авторизован');
+            this.favorites.clear();
+            this.updateUI();
+            return;
+        }
+
+        try {
+            const token = this.getUserToken();
+            console.log('📥 Загрузка избранных...');
+            
+            const response = await fetch(`${this.baseURL}/favorites`, {
+                headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                this.favorites = new Set(data.data.favorites?.map(f => f.id) || []);
+                console.log(`✅ Загружено избранных: ${this.favorites.size}`);
+            }
+            
+            this.updateUI();
+            
+        } catch (error) {
+            console.error('❌ Ошибка загрузки избранных:', error);
+            this.favorites.clear();
+            this.updateUI();
+        }
+    }
+
+    async toggleFavorite(heroId, button) {
+        if (!this.isUserAuthenticated()) {
+            showNotification('Войдите в аккаунт чтобы добавлять в избранное');
+            return;
+        }
+
+        const dbHeroId = getHeroDbIdFromName(heroId);
+        const token = this.getUserToken();
+        
+        if (button) {
+            button.disabled = true;
+            button.style.opacity = '0.5';
+        }
+
+        try {
+            const response = await fetch(`${this.baseURL}/favorites/${dbHeroId}`, {
+                method: 'POST',
+                headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                if (data.data.action === 'added') {
+                    this.favorites.add(dbHeroId);
+                    if (button) button.classList.add('active');
+                    showNotification('✅ Добавлено в избранное');
+                } else {
+                    this.favorites.delete(dbHeroId);
+                    if (button) button.classList.remove('active');
+                    showNotification('❌ Удалено из избранного');
+                }
+                
+                this.updateFavoritesCount();
+            }
+            
+        } catch (error) {
+            console.error('❌ Ошибка избранного:', error);
+            showNotification('Ошибка: ' + error.message);
+        } finally {
+            if (button) {
+                button.disabled = false;
+                button.style.opacity = '1';
+            }
+        }
+    }
+
+    updateFavoriteButtons() {
+        document.querySelectorAll('.favorite-btn').forEach(btn => {
+            const card = btn.closest('.hero-card');
+            if (!card) return;
+            
+            const heroId = card.getAttribute('data-hero');
+            const heroDbId = getHeroDbIdFromName(heroId);
+            
+            // Обновляем состояние кнопки
+            if (this.favorites.has(heroDbId)) {
+                btn.classList.add('active');
+                btn.innerHTML = '❤️';
+                btn.title = 'Убрать из избранного';
+            } else {
+                btn.classList.remove('active');
+                btn.innerHTML = '🤍';
+                btn.title = 'Добавить в избранное';
+            }
+            
+            // Доступность
+            if (!this.isUserAuthenticated()) {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+                btn.title = 'Войдите чтобы добавить в избранное';
+            } else {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            }
+        });
+    }
+
+    updateFavoritesCount() {
+        const favBtn = document.querySelector('[data-filter="favorites"]');
+        if (!favBtn) return;
+        
+        // Удаляем старый счетчик
+        const oldCounter = favBtn.querySelector('.favorites-count');
+        if (oldCounter) oldCounter.remove();
+        
+        // Добавляем новый если есть избранные
+        if (this.favorites.size > 0) {
+            const counter = document.createElement('span');
+            counter.className = 'favorites-count';
+            counter.textContent = this.favorites.size;
+            favBtn.appendChild(counter);
+        }
+    }
+
+    updateUI() {
+        this.updateFavoriteButtons();
+        this.updateFavoritesCount();
+    }
+
+    clearFavorites() {
+        this.favorites.clear();
+        this.updateUI();
+    }
+}
+
+// ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
+
+// Функция для показа уведомлений
+function showNotification(message) {
+    console.log('💬 Уведомление:', message);
+    
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #4a90e2;
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        z-index: 10000;
+        font-family: "Anonymous Pro", monospace;
+        font-size: 14px;
+        animation: slideIn 0.3s ease-out;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    `;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease-in';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+// Функции для модальных окон
+function openLoginModal() {
+    const loginModal = document.getElementById('loginModal');
+    if (loginModal) {
+        loginModal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        
+        // Показываем форму входа
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        
+        if (loginForm) loginForm.style.display = 'block';
+        if (registerForm) registerForm.style.display = 'none';
+        
+        // Очищаем ошибки
+        const loginError = document.getElementById('loginError');
+        const registerError = document.getElementById('registerError');
+        if (loginError) loginError.textContent = '';
+        if (registerError) registerError.textContent = '';
+        
+        console.log('✅ Открыто окно входа');
+    }
+}
+
+function openRegisterModal() {
+    const registerModal = document.getElementById('registerModal');
+    if (registerModal) {
+        registerModal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        
+        // Показываем форму регистрации
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        
+        if (loginForm) loginForm.style.display = 'none';
+        if (registerForm) registerForm.style.display = 'block';
+        
+        // Очищаем ошибки
+        const loginError = document.getElementById('loginError');
+        const registerError = document.getElementById('registerError');
+        if (loginError) loginError.textContent = '';
+        if (registerError) registerError.textContent = '';
+        
+        console.log('✅ Открыто окно регистрации');
+    }
+}
+
+// Закрытие модальных окон
+function closeModal(modal) {
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+        console.log('❌ Модальное окно закрыто');
+    }
+}
+
+// Анимации для уведомлений
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+    .favorites-count {
+        background: #e62429;
+        color: white;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        margin-left: 5px;
+        font-weight: bold;
+    }
+`;
+document.head.appendChild(style);
+
+// ========== ГЛОБАЛЬНЫЕ ОБЪЕКТЫ И ФУНКЦИИ ==========
+window.authService = new SimpleAuthService();
+window.favoritesManager = new FavoritesManager();
+window.showNotification = showNotification;
+window.openLoginModal = openLoginModal;
+window.openRegisterModal = openRegisterModal;
+window.closeModal = closeModal;
+
+console.log('🚀 Система авторизации и избранного готова к работе!');
+
+// Автоматически обновляем UI при загрузке
+document.addEventListener('DOMContentLoaded', () => {
+    window.authService.updateAuthUI();
+    console.log('🎨 UI обновлен после загрузки DOM');
+    
+    // Настраиваем обработчики закрытия модальных окон
+    const closeButtons = document.querySelectorAll('.close-modal, .modal-close');
+    closeButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const modal = this.closest('.modal') || 
+                         document.getElementById('loginModal') || 
+                         document.getElementById('registerModal');
+            if (modal) {
+                closeModal(modal);
+            }
+        });
+    });
+    
+    // Закрытие по клику вне окна
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal(this);
+            }
+        });
+    });
+    
+    // Закрытие по ESC
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            modals.forEach(modal => {
+                if (modal.style.display === 'flex') {
+                    closeModal(modal);
+                }
+            });
+        }
+    });
+});
+
+script main
+// ========== script_main.js - ТОЛЬКО ДЛЯ ГЛАВНОЙ СТРАНИЦЫ ==========
+
+console.log('📄 script_main.js загружен (только для главной страницы)');
+
+// ========== ФУНКЦИИ ДЛЯ МОДАЛЬНЫХ ОКОН ==========
+
+// Функция открытия модального окна входа
+function openLoginModal() {
+    console.log('🔓 Открытие модального окна входа');
+    const loginModal = document.getElementById('loginModal');
+    if (loginModal) {
+        loginModal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        
+        // Показываем форму входа, скрываем регистрацию
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        
+        if (loginForm) loginForm.style.display = 'block';
+        if (registerForm) registerForm.style.display = 'none';
+        
+        // Очищаем ошибки
+        const loginError = document.getElementById('loginError');
+        const registerError = document.getElementById('registerError');
+        if (loginError) loginError.textContent = '';
+        if (registerError) registerError.textContent = '';
+    } else {
+        console.error('❌ Модальное окно входа не найдено');
+    }
+}
+
+// Функция открытия модального окна регистрации
+function openRegisterModal() {
+    console.log('🔓 Открытие модального окна регистрации');
+    const registerModal = document.getElementById('registerModal');
+    if (registerModal) {
+        registerModal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        
+        // Показываем форму регистрации, скрываем вход
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        
+        if (loginForm) loginForm.style.display = 'none';
+        if (registerForm) registerForm.style.display = 'block';
+        
+        // Очищаем ошибки
+        const loginError = document.getElementById('loginError');
+        const registerError = document.getElementById('registerError');
+        if (loginError) loginError.textContent = '';
+        if (registerError) registerError.textContent = '';
+    } else {
+        console.error('❌ Модальное окно регистрации не найдено');
+    }
+}
+
+// Функция закрытия модального окна
+function closeModal(modal) {
+    if (modal) {
+        console.log('❌ Закрытие модального окна');
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+}
+
+// Экспортируем функции
+window.openLoginModal = openLoginModal;
+window.openRegisterModal = openRegisterModal;
+window.closeModal = closeModal;
+
+// ========== ИНИЦИАЛИЗАЦИЯ ГЛАВНОЙ СТРАНИЦЫ ==========
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🏠 DOM загружен, инициализация главной страницы');
+    
+    // Проверяем, что мы на главной странице
+    if (!document.querySelector('.hero')) {
+        console.log('ℹ️ Не на главной странице, выходим');
+        return;
+    }
+    
+    console.log('✅ На главной странице, продолжаем инициализацию');
+
+    // ========== HEADER И БУРГЕР-МЕНЮ ==========
+    
+    // Header с мобильным поведением
+    const header = document.getElementById('mainHeader');
+    if (header) {
+        console.log('✅ Хедер найден');
+        window.addEventListener('scroll', function() {
+            const shouldAddClass = window.scrollY > 50;
+            if (shouldAddClass) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+    } else {
+        console.warn('⚠️ Хедер не найден');
+    }
+
+    // Бургер-меню
+    const burgerMenu = document.querySelector('.burger-menu');
+    const nav = document.querySelector('nav');
+    
+    if (burgerMenu && nav) {
+        console.log('✅ Бургер-меню найдено');
+        burgerMenu.addEventListener('click', function() {
+            console.log('🍔 Клик по бургер-меню');
+            this.classList.toggle('active');
+            nav.classList.toggle('active');
+            document.body.style.overflow = nav.classList.contains('active') ? 'hidden' : '';
+        });
+    } else {
+        console.warn('⚠️ Бургер-меню или навигация не найдены');
+    }
+
+    // Закрытие меню при клике на ссылки
+    const navLinks = document.querySelectorAll('nav a');
+    if (navLinks.length > 0) {
+        console.log(`✅ Найдено ${navLinks.length} ссылок в навигации`);
+        navLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                if (window.innerWidth <= 768 && burgerMenu && nav) {
+                    burgerMenu.classList.remove('active');
+                    nav.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
+            });
+        });
+    }
+
+    // ========== ВИДЕО ФОН ==========
+    
+    const heroVideo = document.querySelector('.hero-video');
+    if (heroVideo) {
+        console.log('✅ Видео-фон найден');
+        function tryAutoPlay() {
+            const promise = heroVideo.play();
+            
+            if (promise !== undefined) {
+                promise.catch(error => {
+                    console.log('⚠️ Автозапуск видео заблокирован');
+                    heroVideo.style.display = 'none';
+                    const hero = document.querySelector('.hero');
+                    if (hero) {
+                        hero.style.background = 'url("img_main/marvel-rivals-bg.jpg") center/cover';
+                    }
+                }).then(() => {
+                    console.log('✅ Видео запущено');
+                });
+            }
+        }
+
+        window.addEventListener('load', tryAutoPlay);
+    }
+
+    // ========== ТРЕЙЛЕР ==========
+    
+    const watchTrailerBtn = document.getElementById('watchTrailer');
+    if (watchTrailerBtn) {
+        console.log('✅ Кнопка трейлера найдена');
+        watchTrailerBtn.addEventListener('click', function() {
+            console.log('🎬 Открытие трейлера');
+            
+            // Создаем модальное окно
+            const modal = document.createElement('div');
+            modal.className = 'video-modal';
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.9);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 10000;
+            `;
+            
+            // Видео
+            const video = document.createElement('video');
+            video.src = 'img_main/trailer.mp4';
+            video.controls = true;
+            video.style.cssText = `
+                width: 90%;
+                max-width: 800px;
+                border-radius: 10px;
+            `;
+            
+            // Кнопка закрытия
+            const closeBtn = document.createElement('button');
+            closeBtn.innerHTML = '&times;';
+            closeBtn.style.cssText = `
+                position: absolute;
+                top: 20px;
+                right: 20px;
+                background: #e62429;
+                color: white;
+                border: none;
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                font-size: 24px;
+                cursor: pointer;
+                z-index: 10001;
+            `;
+            
+            closeBtn.addEventListener('click', function() {
+                console.log('❌ Закрытие трейлера');
+                document.body.removeChild(modal);
+                video.pause();
+            });
+            
+            modal.appendChild(video);
+            modal.appendChild(closeBtn);
+            document.body.appendChild(modal);
+            
+            // Закрытие по клику вне видео
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    document.body.removeChild(modal);
+                    video.pause();
+                }
+            });
+            
+            // Запуск видео
+            video.play().catch(error => {
+                console.error('❌ Ошибка воспроизведения видео:', error);
+            });
+        });
+    }
+
+    // ========== ТАЙМЕР ОБРАТНОГО ОТСЧЁТА ==========
+    
+    function updateCountdown() {
+        const betaDate = new Date("2026-01-10T00:00:00").getTime();
+        const now = new Date().getTime();
+        const distance = betaDate - now;
+        
+        const daysElem = document.getElementById("days");
+        const hoursElem = document.getElementById("hours");
+        const minutesElem = document.getElementById("minutes");
+        const secondsElem = document.getElementById("seconds");
+        
+        if (daysElem) {
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            daysElem.textContent = days.toString().padStart(2, '0');
+        }
+        
+        if (hoursElem) {
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            hoursElem.textContent = hours.toString().padStart(2, '0');
+        }
+        
+        if (minutesElem) {
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            minutesElem.textContent = minutes.toString().padStart(2, '0');
+        }
+        
+        if (secondsElem) {
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            secondsElem.textContent = seconds.toString().padStart(2, '0');
+        }
+    }
+
+    // Проверяем наличие элементов таймера
+    const daysElem = document.getElementById("days");
+    if (daysElem) {
+        console.log('✅ Таймер найден, запускаем');
+        setInterval(updateCountdown, 1000);
+        updateCountdown();
+    } else {
+        console.log('ℹ️ Таймер не найден на странице');
+    }
+
+    // ========== СЛАЙДЕР ОТЗЫВОВ ==========
+    
+    const testimonials = document.querySelectorAll('.testimonial');
+    const dots = document.querySelectorAll('.slider-dot');
+    
+    if (testimonials.length > 0 && dots.length > 0) {
+        console.log(`✅ Слайдер найден: ${testimonials.length} отзывов, ${dots.length} точек`);
+        
+        let currentTestimonial = 0;
+        let testimonialInterval;
+
+        function showTestimonial(index) {
+            // Скрываем все отзывы
+            testimonials.forEach(t => {
+                t.style.display = 'none';
+                t.classList.remove('active');
+            });
+            
+            // Убираем активный класс со всех точек
+            dots.forEach(d => d.classList.remove('active'));
+            
+            // Показываем текущий отзыв
+            if (testimonials[index]) {
+                testimonials[index].style.display = 'block';
+                testimonials[index].classList.add('active');
+            }
+            
+            // Активируем текущую точку
+            if (dots[index]) {
+                dots[index].classList.add('active');
+            }
+            
+            currentTestimonial = index;
+        }
+
+        function startTestimonialSlider() {
+            testimonialInterval = setInterval(() => {
+                const nextIndex = (currentTestimonial + 1) % testimonials.length;
+                showTestimonial(nextIndex);
+            }, 5000);
+        }
+
+        // Назначаем обработчики на точки
+        dots.forEach((dot, index) => {
+            dot.addEventListener('click', () => {
+                console.log(`👉 Клик на точку ${index}`);
+                clearInterval(testimonialInterval);
+                showTestimonial(index);
+                startTestimonialSlider();
+            });
+        });
+
+        // Показываем первый отзыв и запускаем слайдер
+        showTestimonial(0);
+        startTestimonialSlider();
+        console.log('✅ Слайдер запущен');
+    } else {
+        console.log('ℹ️ Слайдер не найден на странице');
+    }
+
+    // ========== АНИМАЦИЯ КАРТОЧЕК ==========
+    
+    const characterCards = document.querySelectorAll('.character-card');
+    if (characterCards.length > 0) {
+        console.log(`✅ Найдено ${characterCards.length} карточек персонажей`);
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, {
+            threshold: 0.1,
+            rootMargin: '50px'
+        });
+
+        characterCards.forEach(card => {
+            observer.observe(card);
+            
+            card.addEventListener('click', function() {
+                const characterName = this.querySelector('h3');
+                if (characterName) {
+                    alert(`Подробнее о ${characterName.textContent} на странице "Герои"`);
+                }
+            });
+        });
+    }
+
+    // ========== ОБРАБОТЧИКИ МОДАЛЬНЫХ ОКОН ==========
+    
+    // Кнопки открытия
+    const openLoginBtn = document.getElementById('openLoginBtn');
+    const openModalBtn = document.getElementById('openModalBtn');
+    
+    if (openLoginBtn) {
+        openLoginBtn.addEventListener('click', openLoginModal);
+    }
+    
+    if (openModalBtn) {
+        openModalBtn.addEventListener('click', openRegisterModal);
+    }
+
+    // Кнопки закрытия
+    const closeModalBtns = document.querySelectorAll('.close-modal, .modal-close');
+    closeModalBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            console.log('❌ Клик на кнопку закрытия');
+            const modal = this.closest('.modal');
+            if (modal) {
+                closeModal(modal);
+            }
+        });
+    });
+
+    // Кнопка переключения между формами
+    const switchToRegister = document.getElementById('switchToRegister');
+    if (switchToRegister) {
+        switchToRegister.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('🔄 Переключение на регистрацию');
+            
+            // Закрываем окно входа
+            const loginModal = document.getElementById('loginModal');
+            if (loginModal) {
+                closeModal(loginModal);
+            }
+            
+            // Открываем окно регистрации
+            setTimeout(() => {
+                openRegisterModal();
+            }, 300);
+        });
+    }
+
+    // Закрытие по клику вне окна
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                console.log('❌ Клик вне модального окна');
+                closeModal(this);
+            }
+        });
+    });
+
+    // Закрытие по клавише ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            console.log('❌ Закрытие по ESC');
+            modals.forEach(modal => {
+                if (modal.style.display === 'flex') {
+                    closeModal(modal);
+                }
+            });
+        }
+    });
+
+    // ========== ОБРАБОТЧИКИ ФОРМ ==========
+    
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+
+    if (loginForm) {
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            console.log('📝 Отправка формы входа');
+            
+            const email = this.querySelector('#loginEmail').value;
+            const password = this.querySelector('#loginPassword').value;
+            const errorElement = this.querySelector('#loginError');
+
+            if (!window.authService) {
+                alert('❌ Система авторизации не загружена');
+                return;
+            }
+
+            try {
+                const result = await window.authService.login({
+                    email: email,
+                    password: password
+                });
+
+                alert(`🎮 С возвращением, ${result.user.username}!`);
+                
+                // Закрываем модальное окно
+                const loginModal = document.getElementById('loginModal');
+                if (loginModal) closeModal(loginModal);
+                
+                this.reset();
+                
+                // Перезагружаем страницу
+                setTimeout(() => window.location.reload(), 1000);
+
+            } catch (error) {
+                console.error('❌ Ошибка входа:', error);
+                if (errorElement) {
+                    errorElement.textContent = error.message || 'Неверный email или пароль';
+                } else {
+                    alert('❌ Ошибка входа: ' + error.message);
+                }
+            }
+        });
+    }
+
+    if (registerForm) {
+        registerForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            console.log('📝 Отправка формы регистрации');
+            
+            const username = this.querySelector('#username').value;
+            const email = this.querySelector('#email').value;
+            const password = this.querySelector('#password').value;
+            const confirmPassword = this.querySelector('#confirmPassword').value;
+            
+            // Валидация
+            if (password !== confirmPassword) {
+                alert('❌ Пароли не совпадают!');
+                return;
+            }
+            
+            if (password.length < 6) {
+                alert('❌ Пароль должен содержать не менее 6 символов');
+                return;
+            }
+
+            if (!window.authService) {
+                alert('❌ Система авторизации не загружена');
+                return;
+            }
+
+            try {
+                const result = await window.authService.register({
+                    username: username,
+                    email: email,
+                    password: password
+                });
+
+                alert(`🎉 Добро пожаловать в команду, ${username}!`);
+                
+                // Закрываем модальное окно
+                const registerModal = document.getElementById('registerModal');
+                if (registerModal) closeModal(registerModal);
+                
+                this.reset();
+                
+                // Перезагружаем страницу
+                setTimeout(() => window.location.reload(), 1000);
+
+            } catch (error) {
+                console.error('❌ Ошибка регистрации:', error);
+                alert('❌ Ошибка регистрации: ' + error.message);
+            }
+        });
+    }
+
+    console.log('✅ Главная страница полностью инициализирована');
+});
+
+console.log('📄 script_main.js загружен успешно');
+
+script community
+class CommunityManager {
+    constructor() {
+        console.log('🆕 Создание CommunityManager');
+        this.currentUser = null;
+        this.posts = [];
+        this.apiBase = '/api/community'; // ✅ Только путь, без .php
+        this.currentFilter = 'all';
+        this.currentSort = 'newest';
+        
+        console.log('⚙️ Настройки:', {
+            apiBase: this.apiBase,
+            currentUser: this.currentUser
+        });
+        
+        this.init();
+    }
+
+    async init() {
+        console.log('=== CommunityManager: Инициализация ===');
+        this.checkAuth();
+        this.setupEventListeners();
+        await this.loadPosts();
+        this.updateUserInterface();
+        
+        this.setDemoStats();
+        this.setDemoTopPlayers();
+        this.setDemoEvents();
+        console.log('=== CommunityManager: Инициализация завершена ===');
+    }
+
+    checkAuth() {
+        console.log('🔐 Проверка авторизации');
+        const savedUser = localStorage.getItem('marvelUser');
+        
+        if (savedUser) {
+            try {
+                this.currentUser = JSON.parse(savedUser);
+                console.log('✅ Пользователь найден:', this.currentUser.username);
+            } catch (e) {
+                console.error('❌ Ошибка парсинга пользователя:', e);
+            }
+        } else {
+            console.log('ℹ️ Пользователь не авторизован');
+        }
+    }
+
+    getAuthHeaders() {
+        const token = localStorage.getItem('marvelToken');
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        
+        return headers;
+    }
+
+    async loadPosts(filter = 'all', sort = 'newest') {
+        console.log('==========================================');
+        console.log('📡 ЗАГРУЗКА ПОСТОВ');
+        console.log('==========================================');
+        console.log('Фильтр:', filter);
+        console.log('Сортировка:', sort);
+        
+        // Кодируем параметры
+        const filterParam = encodeURIComponent(filter);
+        const sortParam = encodeURIComponent(sort);
+        
+        // ✅ ИСПРАВЛЕНО: без .php
+        const url = `${this.apiBase}/posts?filter=${filterParam}&sort=${sortParam}`;
+        
+        console.log('API URL:', url);
+        
+        this.currentFilter = filter;
+        this.currentSort = sort;
+        
+        const postsContainer = document.getElementById('postsContainer');
+        if (postsContainer) {
+            postsContainer.innerHTML = '<div class="loading-posts">Загрузка постов...</div>';
+        }
+        
+        try {
+            console.log('🚀 Отправка fetch запроса...');
+            
+            const response = await fetch(url, {
+                headers: this.getAuthHeaders()
+            });
+            
+            console.log('📨 Ответ получен:', response.status, response.statusText);
+            
+            if (!response.ok) {
+                console.error('❌ Ошибка HTTP:', response.status);
+                
+                // Если сервер недоступен, покажем демо-посты
+                if (response.status === 404) {
+                    console.log('⚠️ API endpoint не найден. Показываем демо-посты.');
+                    this.showDemoPosts();
+                    return;
+                }
+                
+                throw new Error(`HTTP ошибка: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                console.log(`✅ Получено постов: ${data.data.length}`);
+                this.posts = data.data;
+                console.log('💾 Посты сохранены в память');
+                
+                this.updateSortUI(sort);
+                this.renderPosts();
+            } else {
+                console.error('❌ Ошибка от сервера:', data.message);
+                this.showDemoPosts();
+            }
+            
+        } catch (error) {
+            console.error('❌ Ошибка сети при загрузке постов:', error);
+            console.log('🎭 Показываем демо-посты из-за ошибки сети');
+            this.showDemoPosts();
+        }
+        
+        console.log('==========================================');
+        console.log('🏁 ЗАГРУЗКА ПОСТОВ ЗАВЕРШЕНА');
+        console.log('==========================================');
+    }
+
+    async createNewPost() {
+        console.log('✍️ Создание нового поста');
+        
+        if (!this.currentUser) {
+            alert('Войдите в аккаунт, чтобы создавать посты!');
+            return;
+        }
+
+        const postContent = document.getElementById('postContent');
+        if (!postContent || !postContent.value.trim()) {
+            alert('Введите текст поста!');
+            return;
+        }
+
+        const activeTag = document.querySelector('.tag-topic.active');
+        const topic = activeTag ? activeTag.textContent : 'Обсуждение';
+        const title = postContent.value.substring(0, 50) + (postContent.value.length > 50 ? '...' : '');
+
+        console.log('📝 Данные поста:', { title, topic, contentLength: postContent.value.length });
+
+        try {
+            // ✅ ИСПРАВЛЕНО: без .php
+            const response = await fetch(`${this.apiBase}/posts`, {
+                method: 'POST',
+                headers: this.getAuthHeaders(),
+                body: JSON.stringify({
+                    title: title,
+                    content: postContent.value,
+                    topic: topic
+                })
+            });
+            
+            console.log('📨 Ответ на создание поста:', response.status);
+            
+            if (response.ok) {
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    console.log('✅ Пост создан на сервере');
+                    postContent.value = '';
+                    
+                    const submitBtn = document.getElementById('submitPostBtn');
+                    if (submitBtn) submitBtn.disabled = true;
+                    
+                    document.querySelectorAll('.tag-topic.active').forEach(tag => {
+                        tag.classList.remove('active');
+                    });
+
+                    await this.loadPosts(this.currentFilter, this.currentSort);
+                    alert('✅ Пост успешно опубликован!');
+                } else {
+                    alert('❌ Ошибка: ' + (data.message || 'Неизвестная ошибка'));
+                }
+            } else {
+                throw new Error('Сервер не ответил');
+            }
+        } catch (error) {
+            console.error('❌ Ошибка создания поста:', error);
+            this.addDemoPost(title, postContent.value, topic);
+            postContent.value = '';
+            alert('📝 Пост добавлен (демо-режим)!');
+        }
+    }
+
+    async loadComments(postId) {
+        console.log('💬 Загрузка комментариев для поста ID:', postId);
+        
+        try {
+            // ✅ ИСПРАВЛЕНО: без .php
+            const response = await fetch(`${this.apiBase}/comments/${postId}`, {
+                headers: this.getAuthHeaders()
+            });
+            
+            console.log('📨 Ответ на загрузку комментариев:', response.status);
+            
+            if (response.ok) {
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    console.log(`✅ Комментарии загружены: ${data.data.length} шт.`);
+                    this.renderComments(postId, data.data);
+                }
+            }
+        } catch (error) {
+            console.error('❌ Ошибка загрузки комментариев:', error);
+            const demoComments = [
+                { 
+                    username: 'IronManFan', 
+                    content: 'Интересный пост! Спасибо за информацию.', 
+                    created_at: new Date(Date.now() - 3600000).toISOString() 
+                },
+                { 
+                    username: 'SpideyWeb', 
+                    content: 'Полностью согласен с автором.', 
+                    created_at: new Date(Date.now() - 7200000).toISOString() 
+                }
+            ];
+            this.renderComments(postId, demoComments);
+        }
+    }
+
+    async addComment(postId) {
+        console.log('💬 Добавление комментария к посту ID:', postId);
+        
+        if (!this.currentUser) {
+            alert('Войдите в аккаунт, чтобы оставлять комментарии!');
+            return;
+        }
+
+        const commentText = document.getElementById('commentText');
+        if (!commentText || !commentText.value.trim()) {
+            alert('Введите текст комментария!');
+            return;
+        }
+
+        try {
+            // ✅ ИСПРАВЛЕНО: без .php
+            const response = await fetch(`${this.apiBase}/comments`, {
+                method: 'POST',
+                headers: this.getAuthHeaders(),
+                body: JSON.stringify({
+                    post_id: postId,
+                    content: commentText.value
+                })
+            });
+            
+            console.log('📨 Ответ на добавление комментария:', response.status);
+            
+            if (response.ok) {
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    console.log('✅ Комментарий добавлен на сервер');
+                    commentText.value = '';
+                    
+                    // Обновляем комментарии
+                    await this.loadComments(postId);
+                    
+                    // Обновляем счетчик комментариев
+                    const post = this.posts.find(p => p.id === postId);
+                    if (post) {
+                        post.comments += 1;
+                        const postElement = document.querySelector(`.post-card[data-post-id="${postId}"]`);
+                        if (postElement) {
+                            const commentsCount = postElement.querySelector('.post-stat[data-action="comment"] span:last-child');
+                            if (commentsCount) {
+                                commentsCount.textContent = post.comments;
+                            }
+                        }
+                    }
+                    
+                    alert('✅ Комментарий добавлен!');
+                }
+            }
+        } catch (error) {
+            console.error('❌ Ошибка добавления комментария:', error);
+            alert('💬 Комментарий добавлен (демо-режим)!');
+        }
+    }
+
+    async toggleLike(postId, element) {
+        console.log('❤️ Лайк для поста ID:', postId);
+        
+        if (!this.currentUser) {
+            alert('Войдите в аккаунт, чтобы ставить лайки!');
+            return;
+        }
+
+        try {
+            // ✅ ИСПРАВЛЕНО: используем /likes вместо /like.php
+            const response = await fetch(`${this.apiBase}/likes`, {
+                method: 'POST',
+                headers: this.getAuthHeaders(),
+                body: JSON.stringify({ post_id: postId })
+            });
+            
+            console.log('📨 Ответ на лайк:', response.status);
+            
+            if (response.ok) {
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    console.log('✅ Лайк обработан сервером');
+                    this.updateLikeUI(element, data.data.action === 'liked');
+                }
+            } else {
+                console.warn('⚠️ Сервер не ответил на лайк');
+                this.updateLikeUI(element, !element.classList.contains('liked'));
+            }
+        } catch (error) {
+            console.error('❌ Ошибка сети при лайке:', error);
+            this.updateLikeUI(element, !element.classList.contains('liked'));
+        }
+    }
+
+    updateLikeUI(element, isLiked) {
+        console.log('🎨 Обновление UI лайка. Новое состояние:', isLiked);
+        
+        const likeCount = element.querySelector('.like-count');
+        const currentLikes = parseInt(likeCount.textContent);
+        
+        if (isLiked) {
+            element.classList.add('liked');
+            likeCount.textContent = currentLikes + 1;
+            console.log('👍 Лайк добавлен. Новое количество:', likeCount.textContent);
+        } else {
+            element.classList.remove('liked');
+            likeCount.textContent = currentLikes - 1;
+            console.log('👎 Лайк убран. Новое количество:', likeCount.textContent);
+        }
+    }
+
+    async createNewPost() {
+        console.log('✍️ Создание нового поста');
+        
+        if (!this.currentUser) {
+            console.warn('⚠️ Попытка создать пост без авторизации');
+            alert('Войдите в аккаунт, чтобы создавать посты!');
+            return;
+        }
+
+        const postContent = document.getElementById('postContent');
+        if (!postContent || !postContent.value.trim()) {
+            console.warn('⚠️ Пустое содержание поста');
+            alert('Введите текст поста!');
+            return;
+        }
+
+        const activeTag = document.querySelector('.tag-topic.active');
+        const topic = activeTag ? activeTag.textContent : 'Обсуждение';
+        const title = postContent.value.substring(0, 50) + (postContent.value.length > 50 ? '...' : '');
+
+        console.log('📝 Данные поста:', {
+            title: title,
+            topic: topic,
+            contentLength: postContent.value.length
+        });
+
+        try {
+            const response = await fetch(`${this.apiBase}/posts.php`, {
+                method: 'POST',
+                headers: this.getAuthHeaders(),
+                body: JSON.stringify({
+                    title: title,
+                    content: postContent.value,
+                    topic: topic
+                })
+            });
+            
+            console.log('📨 Ответ на создание поста:', response.status);
+            
+            if (response.ok) {
+                const text = await response.text();
+                console.log('📄 Ответ сервера:', text);
+                
+                try {
+                    const data = JSON.parse(text);
+                    if (data.status === 'success') {
+                        console.log('✅ Пост создан на сервере');
+                        postContent.value = '';
+                        document.getElementById('submitPostBtn').disabled = true;
+                        document.querySelectorAll('.tag-topic.active').forEach(tag => {
+                            tag.classList.remove('active');
+                        });
+
+                        await this.loadPosts(this.currentFilter, this.currentSort);
+                        alert('Пост успешно опубликован!');
+                    } else {
+                        console.error('❌ Ошибка от сервера:', data.message);
+                        alert('Ошибка: ' + data.message);
+                    }
+                } catch (e) {
+                    console.error('❌ Ошибка парсинга ответа:', e);
+                }
+            } else {
+                console.warn('⚠️ Сервер не ответил на создание поста');
+                this.addDemoPost(title, postContent.value, topic);
+                postContent.value = '';
+                document.getElementById('submitPostBtn').disabled = true;
+                document.querySelectorAll('.tag-topic.active').forEach(tag => {
+                    tag.classList.remove('active');
+                });
+                alert('Пост добавлен (демо-режим)!');
+            }
+        } catch (error) {
+            console.error('❌ Ошибка сети при создании поста:', error);
+            this.addDemoPost(title, postContent.value, topic);
+            postContent.value = '';
+            alert('Пост добавлен (демо-режим)!');
+        }
+    }
+
+    addDemoPost(title, content, topic) {
+        console.log('🎭 Добавление демо-поста');
+        
+        const newPost = {
+            id: this.posts.length + 1,
+            username: this.currentUser.username,
+            title: title,
+            content: content,
+            topic: topic,
+            likes: 0,
+            comments: 0,
+            views: 0,
+            created_at: new Date().toISOString(),
+            is_liked: false
+        };
+        
+        this.posts.unshift(newPost);
+        console.log('✅ Демо-пост добавлен. ID:', newPost.id);
+        this.renderPosts();
+    }
+
+    showPostDetail(postId) {
+        console.log('📖 Показ деталей поста ID:', postId);
+        
+        const post = this.posts.find(p => p.id === postId);
+        if (!post) {
+            console.error('❌ Пост не найден:', postId);
+            return;
+        }
+
+        const modal = document.getElementById('postModal');
+        const modalContent = document.getElementById('postModalContent');
+        
+        if (!modal || !modalContent) {
+            console.error('❌ Модальное окно не найдено');
+            return;
+        }
+
+        modalContent.innerHTML = `
+            <div class="post-detail">
+                <div class="post-detail-header">
+                    <div class="post-detail-author">
+                        <div class="author-avatar-large">
+                            <img src="${this.getUserAvatar(post.username)}" 
+                                 alt="${post.username}"
+                                 onerror="this.onerror=null; this.src='icons/avatar-default.png';">
+                        </div>
+                        <div>
+                            <h3>${post.username}</h3>
+                            <div class="post-detail-meta">
+                                <span>${this.formatTime(post.created_at)}</span>
+                                <span>•</span>
+                                <span class="post-topic">${post.topic}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="post-detail-content">
+                    <h2>${post.title}</h2>
+                    <p>${post.content}</p>
+                </div>
+                
+                <div class="post-detail-stats">
+                    <div class="stat-item">
+                        <span class="stat-icon">👍</span>
+                        <span class="stat-value">${post.likes}</span>
+                        <span class="stat-label">Нравится</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-icon">💬</span>
+                        <span class="stat-value">${post.comments}</span>
+                        <span class="stat-label">Комментарии</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-icon">👁️</span>
+                        <span class="stat-value">${post.views}</span>
+                        <span class="stat-label">Просмотры</span>
+                    </div>
+                </div>
+                
+                <div class="post-detail-comments">
+                    <h4>Комментарии (${post.comments})</h4>
+                    <div class="comment-form">
+                        <textarea id="commentText" placeholder="Напишите комментарий..." rows="2"></textarea>
+                        <button class="submit-comment-btn" onclick="communityManager.addComment(${post.id})">Отправить</button>
+                    </div>
+                    <div class="comments-list" id="commentsList-${post.id}">
+                        <div class="loading-comments">Загрузка комментариев...</div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        modal.style.display = 'flex';
+        console.log('✅ Модальное окно открыто');
+        this.loadComments(post.id);
+        
+        const closeBtn = document.getElementById('closePostModalBtn');
+        if (closeBtn) {
+            closeBtn.onclick = () => {
+                console.log('❌ Закрытие модального окна');
+                modal.style.display = 'none';
+            };
+        }
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                console.log('❌ Закрытие модального окна по клику вне');
+                modal.style.display = 'none';
+            }
+        });
+    }
+
+    async loadComments(postId) {
+        console.log('💬 Загрузка комментариев для поста ID:', postId);
+        
+        try {
+            const response = await fetch(`${this.apiBase}/comments.php?post_id=${postId}`);
+            
+            console.log('📨 Ответ на загрузку комментариев:', response.status);
+            
+            if (response.ok) {
+                const text = await response.text();
+                console.log('📄 Ответ сервера (первые 500):', text.substring(0, 500));
+                
+                try {
+                    const data = JSON.parse(text);
+                    if (data.status === 'success') {
+                        console.log(`✅ Комментарии загружены: ${data.data.length} шт.`);
+                        this.renderComments(postId, data.data);
+                    }
+                } catch (e) {
+                    console.error('❌ Ошибка парсинга комментариев:', e);
+                }
+            }
+        } catch (error) {
+            console.error('❌ Ошибка сети при загрузке комментариев:', error);
+            const demoComments = [
+                { username: 'IronManFan', content: 'Интересный пост! Спасибо за информацию.', created_at: new Date(Date.now() - 3600000).toISOString() },
+                { username: 'SpideyWeb', content: 'Полностью согласен с автором.', created_at: new Date(Date.now() - 7200000).toISOString() }
+            ];
+            this.renderComments(postId, demoComments);
+        }
+    }
+
+    renderComments(postId, comments) {
+        console.log('🎨 Отрисовка комментариев:', comments.length);
+        
+        const commentsList = document.getElementById(`commentsList-${postId}`);
+        if (!commentsList) {
+            console.error('❌ Контейнер комментариев не найден');
+            return;
+        }
+
+        if (comments.length === 0) {
+            console.log('ℹ️ Нет комментариев для отображения');
+            commentsList.innerHTML = '<div class="no-comments">Пока нет комментариев. Будьте первым!</div>';
+        } else {
+            commentsList.innerHTML = comments.map(comment => `
+                <div class="comment">
+                    <div class="comment-author">${comment.username}</div>
+                    <div class="comment-time">${this.formatTime(comment.created_at)}</div>
+                    <div class="comment-text">${comment.content}</div>
+                </div>
+            `).join('');
+            console.log('✅ Комментарии отрисованы');
+        }
+    }
+
+    async addComment(postId) {
+        console.log('💬 Добавление комментария к посту ID:', postId);
+        
+        if (!this.currentUser) {
+            console.warn('⚠️ Попытка комментировать без авторизации');
+            alert('Войдите в аккаунт, чтобы оставлять комментарии!');
+            return;
+        }
+
+        const commentText = document.getElementById('commentText');
+        if (!commentText || !commentText.value.trim()) {
+            console.warn('⚠️ Пустой комментарий');
+            alert('Введите текст комментария!');
+            return;
+        }
+
+        try {
+            const response = await fetch(`${this.apiBase}/comments.php`, {
+                method: 'POST',
+                headers: this.getAuthHeaders(),
+                body: JSON.stringify({
+                    post_id: postId,
+                    content: commentText.value
+                })
+            });
+            
+            console.log('📨 Ответ на добавление комментария:', response.status);
+            
+            if (response.ok) {
+                const text = await response.text();
+                console.log('📄 Ответ сервера:', text);
+                
+                try {
+                    const data = JSON.parse(text);
+                    if (data.status === 'success') {
+                        console.log('✅ Комментарий добавлен на сервер');
+                        commentText.value = '';
+                        
+                        const newComment = {
+                            username: this.currentUser.username,
+                            content: commentText.value,
+                            created_at: new Date().toISOString()
+                        };
+                        
+                        const commentsList = document.getElementById(`commentsList-${postId}`);
+                        if (commentsList) {
+                            const commentDiv = document.createElement('div');
+                            commentDiv.className = 'comment';
+                            commentDiv.innerHTML = `
+                                <div class="comment-author">${newComment.username}</div>
+                                <div class="comment-time">Только что</div>
+                                <div class="comment-text">${newComment.content}</div>
+                            `;
+                            commentsList.prepend(commentDiv);
+                        }
+                        
+                        const post = this.posts.find(p => p.id === postId);
+                        if (post) {
+                            post.comments += 1;
+                            const postElement = document.querySelector(`.post-card[data-post-id="${postId}"]`);
+                            if (postElement) {
+                                const commentsCount = postElement.querySelector('.post-stat[data-action="comment"] span:last-child');
+                                if (commentsCount) {
+                                    commentsCount.textContent = post.comments;
+                                }
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.error('❌ Ошибка парсинга ответа комментария:', e);
+                }
+            }
+        } catch (error) {
+            console.error('❌ Ошибка сети при добавлении комментария:', error);
+            alert('Комментарий добавлен (демо-режим)!');
+        }
+    }
+
+    formatTime(timestamp) {
+        const date = new Date(timestamp);
+        const now = new Date();
+        const diff = now - date;
+        
+        if (diff < 60000) return 'Только что';
+        if (diff < 3600000) {
+            const minutes = Math.floor(diff / 60000);
+            return `${minutes} мин назад`;
+        }
+        if (diff < 86400000) {
+            const hours = Math.floor(diff / 3600000);
+            return `${hours} ч назад`;
+        }
+        return date.toLocaleDateString('ru-RU');
+    }
+
+    getUserAvatar(username) {
+        const avatarMap = {
+            'n1sp1x': 'icons/avatar-default.jpg',
+            'testuser': 'icons/avatar-user3.jpg',
+            'admin': 'icons/avatar-user2.jpg',
+            'lol': 'icons/avatar-user1.jpg',
+        };
+        
+        const avatarFile = avatarMap[username] || 'icons/avatar-default.png';
+        return avatarFile;
+    }
+}
+
+// Инициализация при загрузке страницы
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('📄 DOM загружен, инициализация CommunityManager');
+    
+    try {
+        window.communityManager = new CommunityManager();
+        console.log('✅ CommunityManager создан успешно');
+        console.log('👤 Текущий пользователь:', window.communityManager.currentUser);
+        console.log('🔑 Токен в localStorage:', localStorage.getItem('marvelToken'));
+        
+        console.log('🔍 Проверка DOM элементов:');
+        console.log('  postsContainer:', document.getElementById('postsContainer'));
+        console.log('  submitPostBtn:', document.getElementById('submitPostBtn'));
+        console.log('  currentUserName:', document.getElementById('currentUserName'));
+        console.log('  postContent:', document.getElementById('postContent'));
+        
+    } catch (error) {
+        console.error('❌ Ошибка при создании CommunityManager:', error);
+        console.error('Стек ошибки:', error.stack);
+    }
+});
+
+script heroes
+// Функция для преобразования имени в ID базы данных
+function getHeroDbIdFromName(heroName) {
+
+    
+    const heroMap = {
+    'ironman': 1,
+    'spiderman': 2,
+    'black': 3, 
+    'magik': 4,
+    'loki': 5,
+    'rocket': 6, 
+    'thor': 7,
+    'ironfist': 8, 
+    'venom': 9,
+    'mantis': 10,
+    'wolverine': 11,
+    'baki': 12, 
+    'girl': 13, 
+    'peni': 14, 
+    'groot': 15,
+    'luna': 16, 
+    'hulk': 17,
+    'hela': 18,
+    'hawkeye': 19, 
+    'jeff': 20, 
+    'storm': 21, 
+    'magneto': 22, 
+    'starlord': 23, 
+    'thing': 24, 
+    'scarlet': 25, 
+    'namor': 26, 
+    'psylocke': 27, 
+    'cloakdagger': 28, 
+    'torch': 29, 
+    'fantastic': 30, 
+    'moonknight': 31, 
+    'adam': 32, 
+    'strange': 33, 
+    'invisible': 34, 
+    'punisher': 35, 
+    'captainamerica': 36,
+    'blackwidow': 37,
+};
+    
+    return heroMap[heroName] || 1;
+
+    
+}
+
+// Вариант 3: Автоматическое определение
+function getApiBaseUrl() {
+    if (window.location.hostname === 'marvel-rivals-new.com') {
+        // Проверяем работает ли API на стандартном порту
+        return window.location.port ? 
+            `${window.location.protocol}//${window.location.hostname}:3001/api` :
+            `${window.location.protocol}//${window.location.hostname}/api`;
+    }
+    return 'http://localhost:3001/api';
+}
+
+const API_BASE_URL = getApiBaseUrl();
+console.log('API Base URL:', API_BASE_URL);
+
+// Функция для показа уведомлений
+function showNotification(message) {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #4a90e2;
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        z-index: 10000;
+        font-family: "Anonymous Pro", monospace;
+        animation: slideInRight 0.3s ease-out;
+    `;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+        notification.style.animation = 'slideOutRight 0.3s ease-in';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+// Ждем полной загрузки DOM
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM загружен, инициализируем героев...');
+    
+    // Бургер-меню
+    const burgerMenu = document.querySelector('.burger-menu');
+    const nav = document.querySelector('nav');
+    if (burgerMenu) {
+        burgerMenu.addEventListener('click', function() {
+            this.classList.toggle('active');
+            nav.classList.toggle('active');
+            document.body.style.overflow = nav.classList.contains('active') ? 'hidden' : '';
+        });
+    }
+
+    // ФИЛЬТРАЦИЯ ПО РОЛЯМ (исправленная)
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const heroCards = document.querySelectorAll('.hero-card');
+    
+    console.log(`Найдено кнопок фильтра: ${filterBtns.length}`);
+    console.log(`Найдено карточек: ${heroCards.length}`);
+    
+    // Проверяем данные у карточек
+    heroCards.forEach((card, index) => {
+        const heroId = card.getAttribute('data-hero');
+        const category = card.getAttribute('data-category');
+        console.log(`Карточка ${index}: hero=${heroId}, category=${category}`);
+    });
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    });
+
+    // Инициализация Observer с задержкой
+    function initObserver() {
+        heroCards.forEach(card => {
+            card.classList.remove('visible');
+            if (card.style.display !== 'none') {
+                observer.observe(card);
+            }
+        });
+    }
+
+    // Запускаем при загрузке
+    setTimeout(initObserver, 300);
+
+    // ФУНКЦИЯ ДЛЯ ФИЛЬТРАЦИИ ИЗБРАННЫХ (исправленная)
+   // Замените старую функцию filterFavorites на эту:
+async function filterFavorites() {
+    console.log('=== ФИЛЬТРАЦИЯ ИЗБРАННЫХ ===');
+    
+    // Проверяем авторизацию через наш новый authService
+    if (!window.authService || !window.authService.isAuthenticated()) {
+        showNotification('Войдите в аккаунт чтобы видеть избранных героев!');
+        const loginBtn = document.getElementById('openLoginBtn');
+        if (loginBtn) loginBtn.click();
+        return false;
+    }
+    
+    // Принудительно загружаем избранные
+    if (window.favoritesManager) {
+        try {
+            console.log('Загружаем избранные...');
+            await window.favoritesManager.loadFavoritesFromDB();
+            
+            const favorites = window.favoritesManager.favorites;
+            console.log('Получены избранные ID:', [...favorites]);
+            
+            // Показываем/скрываем карточки
+            let shownCount = 0;
+            const heroCards = document.querySelectorAll('.hero-card');
+            
+            heroCards.forEach(card => {
+                const heroId = card.getAttribute('data-hero');
+                const heroDbId = getHeroDbIdFromName(heroId);
+                
+                if (favorites.has(heroDbId)) {
+                    card.style.display = 'block';
+                    shownCount++;
+                    console.log(`Показана карточка: ${heroId} (ID: ${heroDbId})`);
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            
+            console.log(`Показано избранных: ${shownCount}`);
+            
+            // Обновляем наблюдатель
+            if (window.heroObserver) {
+                heroCards.forEach(card => {
+                    if (card.style.display !== 'none') {
+                        window.heroObserver.observe(card);
+                    }
+                });
+            }
+            
+            return shownCount > 0;
+            
+        } catch (error) {
+            console.error('Ошибка фильтрации избранных:', error);
+            showNotification('Ошибка загрузки избранных');
+            return false;
+        }
+    } else {
+        showNotification('Система избранного не загружена');
+        return false;
+    }
+}
+
+    // ОБНОВЛЯЕМ ПРИ ФИЛЬТРАЦИИ (исправленная логика)
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', async function() {
+            console.log(`Нажата кнопка фильтра: ${this.dataset.filter}`);
+            
+            // Убираем активный класс со всех кнопок
+            filterBtns.forEach(b => b.classList.remove('active'));
+            
+            // Добавляем активный класс текущей кнопке
+            this.classList.add('active');
+            
+            const filter = this.dataset.filter;
+            
+            // Если выбраны избранные
+            if (filter === 'favorites') {
+                await filterFavorites();
+                return;
+            }
+            
+            // ОБЫЧНАЯ ФИЛЬТРАЦИЯ ПО РОЛЯМ
+            console.log(`Фильтр: ${filter}`);
+            
+            let shownCount = 0;
+            heroCards.forEach(card => {
+                const category = card.getAttribute('data-category');
+                
+                if (filter === 'all') {
+                    card.style.display = 'block';
+                    shownCount++;
+                } else if (category === filter) {
+                    card.style.display = 'block';
+                    shownCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            
+            console.log(`Показано карточек: ${shownCount}`);
+            initObserver();
+        });
+    });
+
+    // Хедер
+    const header = document.getElementById('mainHeader');
+    let lastScrollPosition = 0;
+    if (header) {
+        window.addEventListener('scroll', function() {
+            const currentScrollPosition = window.scrollY;
+            const isMobile = window.innerWidth <= 768;
+            
+            if (currentScrollPosition > 50) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+            
+            if (isMobile && nav && !nav.classList.contains('active')) {
+                if (currentScrollPosition > lastScrollPosition && currentScrollPosition > 50) {
+                    header.style.transform = 'translateY(-100%)';
+                    header.style.transition = 'transform 0.3s ease';
+                } else {
+                    header.style.transform = 'translateY(0)';
+                }
+            }
+            
+            lastScrollPosition = currentScrollPosition;
+        });
+    }
+
+    // ========== СИСТЕМА ИЗБРАННОГО ==========
+    initFavoritesSystem();
+
+    // ========== МОДАЛЬНЫЕ ОКНА ГЕРОЕВ ==========
+    initHeroModals();
+});
+
+// Система избранного
+function initFavoritesSystem() {
+    console.log('Base URL:', API_BASE_URL);  // ✅ Работает!
+    console.log('Текущий URL:', window.location.href);
+    console.log('Base URL:', this.baseURL);
+    console.log('Инициализация системы избранного для героев...');
+    // Проверьте существует ли файл
+    fetch(`${this.baseURL}/heroes.php`)
+    .then(response => {
+        console.log('Файл heroes.php существует:', response.status);
+    })
+    .catch(error => {
+        console.error('Файл heroes.php не найден:', error);
+    });
+    
+    // Добавляем стили для кнопки избранного
+    const favoriteStyles = `
+        .favorite-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            border: none;
+            color: white;
+            padding: 0.5rem;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            z-index: 10;
+        }
+
+        .favorite-btn:hover {
+            background: #e62429;
+            transform: scale(1.1);
+        }
+
+        .favorite-btn.active {
+            background: #e62429;
+            color: gold;
+        }
+
+        .favorite-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .favorites-count {
+            background: gold;
+            color: #333;
+            font-size: 12px;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 5px;
+            font-weight: bold;
+        }
+    `;
+
+    const styleSheet = document.createElement('style');
+    styleSheet.textContent = favoriteStyles;
+    document.head.appendChild(styleSheet);
+
+    // Класс для работы с избранным
+    function showNotification(message) {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed; top: 20px; right: 20px; background: #4a90e2; 
+        color: white; padding: 1rem 1.5rem; border-radius: 8px; 
+        z-index: 10000; font-family: "Anonymous Pro", monospace;
+        animation: slideInRight 0.3s ease-out;
+    `;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => notification.style.animation = 'slideOutRight 0.3s ease-in', 300);
+    setTimeout(() => notification.remove(), 3000);
+}
+
+// Обновленный FavoritesManager
+class FavoritesManager {
+    constructor() {
+        this.baseURL = API_BASE_URL;
+        this.favorites = new Set();
+        console.log('✅ FavoritesManager инициализирован');
+    }
+
+    isUserAuthenticated() {
+        return window.authService && window.authService.isAuthenticated();
+    }
+
+    getUserToken() {
+        return window.authService?.token || localStorage.getItem('marvelToken');
+    }
+
+    async loadFavoritesFromDB() {
+        if (!this.isUserAuthenticated()) {
+            console.log('Пользователь не авторизован, пропускаем загрузку избранных');
+            return;
+        }
+
+        try {
+            const token = this.getUserToken();
+            console.log('Загружаем избранные... Токен:', token ? 'есть' : 'нет');
+            
+            const response = await fetch(`${this.baseURL}/favorites`, {
+                headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const result = await response.json();
+            console.log('Ответ от сервера:', result);
+            
+            if (result.success && result.data && Array.isArray(result.data.favorites)) {
+                this.favorites = new Set(result.data.favorites.map(fav => fav.hero_id || fav.id));
+                console.log('Загруженные избранные ID:', [...this.favorites]);
+            } else {
+                console.warn('Неверный формат ответа:', result);
+                this.favorites = new Set();
+            }
+            
+            this.updateFavoriteButtons();
+            this.updateFavoritesCount();
+            
+        } catch (error) {
+            console.error('❌ Ошибка загрузки избранных:', error.message);
+            this.favorites = new Set();
+        }
+    }
+
+    async toggleFavorite(heroId, button) {
+        if (!this.isUserAuthenticated()) {
+            showNotification('Войдите в аккаунт чтобы добавлять героев в избранное');
+            const loginBtn = document.getElementById('openLoginBtn');
+            if (loginBtn) loginBtn.click();
+            return;
+        }
+
+        const dbHeroId = getHeroDbIdFromName(heroId);
+        const token = this.getUserToken();
+        
+        // Визуальная обратная связь
+        button.disabled = true;
+        button.style.opacity = '0.5';
+
+        try {
+            const method = this.favorites.has(dbHeroId) ? 'DELETE' : 'POST';
+            
+            const response = await fetch(`${this.baseURL}/favorites/${dbHeroId}`, {
+                method,
+                headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const result = await response.json();
+            
+            if (result.success) {
+                if (method === 'DELETE') {
+                    this.favorites.delete(dbHeroId);
+                    button.classList.remove('active');
+                    showNotification('Удалено из избранного');
+                } else {
+                    this.favorites.add(dbHeroId);
+                    button.classList.add('active');
+                    showNotification('Добавлено в избранное');
+                }
+                
+                this.updateFavoritesCount();
+            } else {
+                throw new Error(result.message || 'Ошибка сервера');
+            }
+            
+        } catch (error) {
+            console.error('Ошибка обновления избранного:', error);
+            showNotification('Ошибка: ' + error.message);
+        } finally {
+            button.disabled = false;
+            button.style.opacity = '1';
+        }
+    }
+
+    updateFavoriteButtons() {
+        const favoriteBtns = document.querySelectorAll('.favorite-btn');
+        const isAuthenticated = this.isUserAuthenticated();
+
+        favoriteBtns.forEach(btn => {
+            const card = btn.closest('.hero-card');
+            const heroId = card.getAttribute('data-hero');
+            const heroDbId = getHeroDbIdFromName(heroId);
+
+            // Обновляем состояние кнопки
+            if (this.favorites.has(heroDbId)) {
+                btn.classList.add('active');
+                btn.innerHTML = '♥';
+                btn.title = 'Убрать из избранного';
+            } else {
+                btn.classList.remove('active');
+                btn.innerHTML = '♡';
+                btn.title = 'Добавить в избранное';
+            }
+
+            // Настройка доступности
+            if (!isAuthenticated) {
+                btn.style.opacity = '0.5';
+                btn.disabled = true;
+                btn.title = 'Войдите чтобы добавить в избранное';
+            } else {
+                btn.style.opacity = '1';
+                btn.disabled = false;
+            }
+        });
+    }
+
+    updateFavoritesCount() {
+        const favoritesBtn = document.querySelector('[data-filter="favorites"]');
+        if (!favoritesBtn) return;
+
+        const count = this.favorites.size;
+        
+        // Удаляем старый счетчик
+        const oldCountSpan = favoritesBtn.querySelector('.favorites-count');
+        if (oldCountSpan) oldCountSpan.remove();
+
+        // Добавляем новый счетчик если есть избранные
+        if (count > 0) {
+            const countSpan = document.createElement('span');
+            countSpan.className = 'favorites-count';
+            countSpan.textContent = count;
+            favoritesBtn.appendChild(countSpan);
+        }
+    }
+
+    addFavoriteButtons() {
+        const heroCards = document.querySelectorAll('.hero-card');
+        heroCards.forEach(card => {
+            // Проверяем, есть ли уже кнопка
+            if (card.querySelector('.favorite-btn')) return;
+
+            const favoriteBtn = document.createElement('button');
+            favoriteBtn.className = 'favorite-btn';
+            favoriteBtn.innerHTML = '♡';
+            favoriteBtn.title = 'Добавить в избранное';
+            
+            favoriteBtn.onclick = (e) => {
+                e.stopPropagation();
+                const heroId = card.getAttribute('data-hero');
+                this.toggleFavorite(heroId, favoriteBtn);
+            };
+            
+            card.style.position = 'relative';
+            card.appendChild(favoriteBtn);
+        });
+        
+        this.updateFavoriteButtons();
+    }
+
+    clearFavorites() {
+        this.favorites.clear();
+        this.updateFavoriteButtons();
+        this.updateFavoritesCount();
+    }
+}
+    // Инициализируем менеджер избранного
+    window.favoritesManager = new FavoritesManager();
+    window.favoritesManager.addFavoriteButtons();
+}
+
+// Тестовая функция для проверки
+function testFavoritesSystem() {
+    console.log('=== ТЕСТ СИСТЕМЫ ИЗБРАННЫХ ===');
+    console.log('1. Проверка authService:');
+    console.log('   - authService:', window.authService ? 'Есть' : 'Нет');
+    console.log('   - Токен:', window.authService ? window.authService.token : 'Нет');
+    console.log('   - Авторизован:', window.authService ? window.authService.isAuthenticated() : 'Нет');
+    
+    console.log('2. Проверка favoritesManager:');
+    console.log('   - favoritesManager:', window.favoritesManager ? 'Есть' : 'Нет');
+    console.log('   - Избранные:', window.favoritesManager ? [...window.favoritesManager.favorites] : 'Нет');
+    
+    console.log('3. Проверка кнопки избранного:');
+    const favBtn = document.querySelector('[data-filter="favorites"]');
+    console.log('   - Кнопка найдена:', favBtn ? 'Да' : 'Нет');
+    console.log('   - Атрибут data-filter:', favBtn ? favBtn.getAttribute('data-filter') : 'Нет');
+    
+    console.log('4. Проверка карточек:');
+    const cards = document.querySelectorAll('.hero-card');
+    console.log('   - Количество карточек:', cards.length);
+    cards.forEach((card, i) => {
+        if (i < 3) { // Показываем только первые 3 для примера
+            console.log(`   Карточка ${i}:`, {
+                hero: card.getAttribute('data-hero'),
+                category: card.getAttribute('data-category')
+            });
+        }
+    });
+}
+
+
+function initHeroModals() {
+        // Данные о героях
+        const heroesData = {
+            ironman: {
+                name: "Железный Человек",
+                real_name: "Энтони Эдвард 'Тони' Старк",
+                Difficult: "★ ★ ☆ ☆ ☆",
+                role: "Дальний бой · Технологии",
+                image: "img_heroes/Iron_Man_Hero_Portrait.webp",
+                description: "Вооруженный превосходным интеллектом и нанотехнологичным боевым костюмом собственной разработки, Тони Старк стоит рядом с богами как Непобедимый Железный Человек. Его ультрасовременная броня превращает любое поле боя в его личную игровую площадку, позволяя ему украсть то внимание, которого он так отчаянно желает.",
+                abilities: [
+                    {
+                        name: "РЕПУЛЬСИРУЮЩИЙ ВЗРЫВ",
+                        description: "Мощные энергетические импульсы из ладоней доспеха."
+                    },
+                    {
+                        name: "УНИБИТ",
+                        description: "Огонь из наноимпульсных пушек."
+                    },
+                    {
+                        name: "НЕПОБЕДИМАЯ ИМПУЛЬСНАЯ ПУШКА",
+                        description: "Кратковременный рывок в любом направлении."
+                    },
+                    {
+                        name: "НЕПОБЕДИМАЯ ИМПУЛЬСНАЯ ПУШКА",
+                        description: "Кратковременный рывок в любом направлении."
+                    },
+                ],
+                PassAbilities: [
+                    {
+                        name: "УСИЛЕНИЕ БРОНИ",
+                        description: "Активирует Усиление брони, увеличивая урон Репульсирующего Взрыва и Унибит."
+                    },
+                    {
+                        name: "МИКРО-РАКЕТНЫЙ ОБСТРЕЛ",
+                        description: "При использовании Гиперскорость или Усиление брони."
+                    },
+                    {
+                        name: "ГИПЕРСКОРОСТЬ",
+                        description: "Активируйте состояние гиперскорости для быстрого полета вперед"
+                    },
+                ],
+                Team: [
+                    {
+                        name: "ГАММА-ОВЕРДРАЙВ",
+                        description: "Халк заряжает Доктора Стрэнджа и Железного человека гамма-излучением. Когда Доктор Стрэндж использует Водоворот Безумия, он высвобождает избыточную гамма-энергию. Когда Железный человек использует Усиление Брони, он инициирует гамма-апгрейд."
+                    },
+                ]
+            },
+            spiderman: {
+                name: "Человек-Паук",
+                real_name:"Питер Паркер",
+                Difficult: "★ ★ ★ ★ ★",
+                role: "Ближний бой · Мобильность",
+                image: "img_heroes/Spider-Man_Hero_Portrait.webp",
+                description: "Размахивая вокруг арены на своих фирменных паутинных линиях, ваш дружелюбный сосед Человек-паук, он же Питер Паркер, застает своих соперников врасплох хитрыми, липкими взрывами паутины и неожиданными атаками сверху. Берегитесь... вот и Человек-паук!",
+                abilities: [
+                    {
+                        name: "ПАУК-СИЛА",
+                        description: "Размахните кулаками вперед, чтобы ударить, нанося дополнительный урон врагу с помощью Spider-Tracer."
+                    },
+                    {
+                        name: "КИБЕР-ВЕБ КЛАСТЕР",
+                        description: "Выстреливает сгустком паутины, который наносит урон и прикрепляет к пораженному врагу Spider-Tracer."
+                    },
+                    {
+                        name: "ЗРЕЛИЩНАЯ ВЕРТУШКА",
+                        description: "Запускает сгустки паутины вокруг, чтобы наносить урон и оглушать врагов."
+                    },
+                    {
+                        name: "ИДИ СЮДА!",
+                        description: "Стреляйте паутиной, чтобы притянуть пораженного врага. Если враг помечен Spider-Tracer, Человек-паук будет притянут к нему вместо этого."
+                    },
+                    {
+                        name: "УДИВИТЕЛЬНОЕ КОМБО",
+                        description: "Подбрасывает противника вверх, нанося ему дополнительный урон с помощью Spider-Tracer."
+                    },
+                ],
+                PassAbilities: [
+                    {
+                        name: "ЗРЕЛИЩНАЯ ВЕРТУШКА",
+                        description: "Запускает сгустки паутины вокруг, чтобы наносить урон и оглушать врагов."
+                    },
+                    {
+                        name: "ПРЫГ И СКОК",
+                        description: "Выполните двойной прыжок."
+                    },
+                    {
+                        name: "ПОЛЗАНИЕ ПО СТЕНАМ",
+                        description: "Нажмите Пробел, чтобы ползти по стене, и во время ползания щелкните левой кнопкой мыши, чтобы бежать."
+                    },
+                    {
+                        name: "ПАУЧЬЕ ЧУТЬЁ",
+                        description: "Дать предупреждение о врагах, которые были поблизости."
+                    },
+                ],
+                Team: [
+                    {
+                        name: "СИМБИОТ",
+                        description: "Веном делится частью своего симбиота с Человеком-пауком и Пени Паркер , активируя их способности симбиота. Человек-паук и Пени Паркер могут превращать симбиотов во взрывные шипы, которые наносят урон ближайшим врагам и неумолимо отбрасывают их назад."
+                    },
+                    {
+                        name: "ПАУТИННАЯ БОМБА",
+                        description: "Человек-паук дает Девушке-белке паутинную бомбу. Она может выстрелить ею, чтобы взорваться при контакте с окружающей средой или врагом, ненадолго заманивая в ловушку и нанося урон врагам, попавшим под взрыв."
+                    },
+                ],
+
+            },
+            black: {
+                name: "Чёрная Пантера",
+                role: "Ближний бой · Рывок",
+                Difficult: "★ ★ ★ ★ ☆",
+                real_name: "Т'Чалла",
+                image: "img_heroes/Black_Panther_Hero_Portrait.webp",
+                description: "Т'Чалла, король Ваканды, владеет идеальным сочетанием передовой технологии Вибраниума и родовой силы, полученной от Бога-Пантеры, Баста. Черная Пантера выжидает, пока не проникнет в ряды врага и не начнет свою охоту.",
+                abilities: [
+                    {
+                        name: "КОГТИ ИЗ ВИБРАНИУМА",
+                        description: "Режь когтями из вибраниума точно по врагу."
+                    },
+                    {
+                        name: "СПУСК БАСТ",
+                        description: "Призывает Баст, прыгает вперед, наносит урон и прикрепляет метку вибраниума к пораженным врагам, обновляя «Духовный разрыв»."
+                    },
+                    {
+                        name: "ДУХ РАЗРЫВАЕТ",
+                        description: "Сделайте выпад вперед и нанесите урон врагам. Вибраниевая метка производит бонусное здоровье и обновляет способность."
+                    },
+                    {
+                        name: "ВРАЩАЮЩИЙСЯ УДАР",
+                        description: "Двигайтесь по спирали вперед и прикрепите метку Вибраниума, чтобы поражать врагов."
+                    },
+                ],
+                PassAbilities: [
+                    {
+                        name: "ТОНКИЙ ШАГ",
+                        description: "Удерживайте пробел, чтобы бежать по стене; выполните прыжок после отрыва от стены."
+                    },
+                    {
+                        name: "БРОСАНИЕ КОПЬЯ",
+                        description: "Метнуть вперед энергетическое копье из вибраниума, создав силовое поле из вибраниума и прикрепив метку из вибраниума к врагам в радиусе действия."
+                    },
+                    {
+                        name: "ХИТРОСТЬ ПАНТЕРЫ",
+                        description: "Наносит более высокий урон при низком уровне здоровья."
+                    },
+                ],
+                Team: [
+                    {
+                        name: "МАСТЕР ВАКАНДАН",
+                        description: "Когда Мэджик находится на поле боя, Черная Пантера и Псайлок могут подключиться к Лимбо, чтобы вернуться на несколько секунд назад к предыдущей позиции; после прохождения Лимбо Черная Пантера и Псайлок получат бонусное здоровье в зависимости от недостающего здоровья"
+                    },
+                ],
+            },
+            magik: {
+                name: "Мэджик",
+                real_name: "Ильяна Николаевна Распутина",
+                Difficult: "★ ★ ★ ☆ ☆",
+                role: "Ближний бой · Порталы",
+                image: "img_heroes/Magik_Hero_Portrait.webp",
+                description: "Обученная темным искусствам и владеющая своим могучим Мечом Души, Мэджик прыгает через порталы, чтобы с легкостью перемещаться по арене. Как только Ульяна превратится в демонического Темного Дитя, все, кто осмелится противостоять ей, падут перед ее беспощадным клинком.",
+                abilities: [
+                    {
+                        name: "ДУШЕВНЫЙ МЕЧ",
+                        description: "Режь вперед Мечом Души."
+                    },
+                    {
+                        name: "ТЁМНОЕ ДИТЯ",
+                        description: "Превратиться в Темного Дитя, получив улучшения всех своих способностей."
+                    },
+                    {
+                        name: "УМБРАЛОВОЕ ВТОРЖЕНИЕ",
+                        description: "Рывок вперед и подбрасывание врагов."
+                    },
+                    {
+                        name: "СТРАННЫЙ ВИХРЬ",
+                        description: "Вращение во время размахивания Мечом Души после выхода из Шагающего Диска."
+                    },
+                    {
+                        name: "МЭДЖИК СЛЭШ",
+                        description: "Удар вперед с воздушным ударом."
+                    },
+                    {
+                        name: "ГНЕВ ДЕМОНА",
+                        description: "Призывает демона Лимбо, который атакует врагов после выхода из Шагающего Диска."
+                    },
+                ],
+                PassAbilities: [
+                    {
+                        name: "МОЩЬ ЛИМБО",
+                        description: "Конвертировать урон, нанесенный врагам, в бонусное здоровье себе."
+                    },
+                    {
+                        name: "ШАГОВЫЕ ДИСКИ",
+                        description: "Прыжок через Шагающий Диск, телепортирующийся на небольшое расстояние в направлении движения."
+                    },
+                ],
+                Team: [
+                    {
+                        name: "ДИСК МАСТЕР",
+                        description: "Когда Мэджик находится на поле, Черная Пантера и Псайлок могут подключиться к Лимбо, чтобы вернуться на несколько секунд назад к предыдущей позиции; после прохождения Лимбо Черная Пантера и Псайлок получат бонусное здоровье в зависимости от недостающего здоровья."
+                    }
+                ],
+            },
+            loki: {
+                name: "Локи",
+                real_name: "Локи Лауфейсон",
+                Difficult: "★ ★ ★ ★ ☆",
+                role: "Дальний бой · Копии",
+                image: "img_heroes/Loki_Hero_Portrait.webp",
+                description: "Что может быть более захватывающим для Бога Озорства, чем перехитрить своих врагов? Хитрый обманщик Локи использует свои иллюзии и способности к изменению формы, чтобы вступать в бой и выходить из него, играя с врагами на каждом шагу.",
+                abilities: [
+                    {
+                        name: "МИСТИЧЕСКАЯ РАКЕТА",
+                        description: "Выпускает мистические снаряды, чтобы исцелять союзников или наносить урон врагам."
+                    },
+                    {
+                        name: "БОГ ЗЛОСТИ",
+                        description: "Превратитесь в выбранного союзника или вражеского героя и используйте все его способности, кроме любых его способностей Команды."
+                    },
+
+                ],
+                PassAbilities: [
+                    {
+                        name: "ДОМЕН РЕГЕНЕРАЦИИ",
+                        description: "Используйте рунические камни, чтобы создать магическое поле, которое обеспечивает союзников исцелением и преобразует входящий урон в дальнейшее исцеление."
+                    },
+                    {
+                        name: "ДВОЙНИК",
+                        description: "Спроектировать иллюзию, которая может использовать некоторые способности Локи."
+                    },
+                    {
+                        name: "КОВАРНЫЙ ОБМЕН",
+                        description: "Поменяться местами с выбранной иллюзией."
+                    },
+                    {
+                        name: "УДАР В СПИНКУ",
+                        description: "Вытащите кинжал, чтобы нанести удар врагу, нанося дополнительный урон при атаке врага сзади."
+                    },
+                    {
+                        name: "ОБМАН",
+                        description: "Станьте невидимым и создайте иллюзию, чтобы обмануть врагов."
+                    },
+                ],
+                Team: [
+                    {
+                        name: "ЛАУФЕЙСОН ВОЗРОЖДЕН",
+                        description: "Когда Хела наносит последний удар, побеждая врага, она может мгновенно воскресить Локи и Тора в фазе возрождения или дать им дополнительное здоровье, если они все еще живы."
+                    }
+                ],
+            },
+            rocket: {
+                name: "Ракета",
+                real_name: "Ракета Енот",
+                Difficult: "★ ☆ ☆ ☆ ☆",
+                role: "Дальний бой · Воскрешение",
+                image: "img_heroes/Rocket_Raccoon_Hero_Portrait.webp",
+                description: "Ракета, возможно, не выглядит как технический гений или эксперт-тактик, но любой, кто когда-либо попадал в его список, быстро жалел, что недооценивал его. Этот сообразительный космический солдат одинаково стремится усилить своих товарищей по команде и получить награды за своих врагов.",
+                abilities: [
+                    {
+                        name: "РЕЖИМ БОМБАРДЫ",
+                        description: "Выстрел энергетическими снарядами, наносящими урон."
+                    },
+                    {
+                        name: "РЕЖИМ РЕМОНТА",
+                        description: "Стреляет отскакивающими сферами, чтобы исцелить союзников."
+                    },
+                    {
+                        name: "К.У.C",
+                        description: "Разместите Космический Усилитель Сети, который дает союзникам Усиление Урона."
+                    },
+                ],
+                PassAbilities: [
+                    {
+                        name: "РЕАКТИВНЫЙ РАНЕЦ",
+                        description: "Рывок вперед."
+                    },
+                    {
+                        name: "М.В.Б",
+                        description: "Разместите Маяк Возрождения Битвы, который оживляет павшего союзника и периодически производит наборы брони и ракетные ранцы."
+                    },
+                    {
+                        name: "ДИКИЙ ПОЛЗУН",
+                        description: "Удерживайте пробел, чтобы бежать по стене."
+                    },
+                    {
+                        name: "ЛЕТУЧИЙ ТУЗ",
+                        description: "Удерживайте пробел, чтобы медленно падать."
+                    },
+                ],
+                Team: [
+                    {
+                        name: "СТАРЫЕ ДРУЗЬЯ",
+                        description: "Джефф, сухопутная акула и Ракета Енот могут ездить на плечах Грута, получая снижение урона. "
+                    }
+                ],
+            },
+            thor: {
+                name: "Тор",
+                real_name: "Тор Одинсон",
+                Difficult: "★ ★ ★ ☆ ☆",
+                role: "Ближний бой · Сокрушение",
+                image: "img_heroes/Thor_Hero_Portrait.webp",
+                description: "Сын Одина использует свою божественную силу, чтобы вызывать гром и молнии, обрушивая на врагов неумолимую ярость. С могучим молотом Мьёльниром в руке Тор без усилий утверждает свое господство на поле боя.",
+                abilities: [
+                    {
+                        name: "МЬЁЛЬНИР БАШ",
+                        description: "Используйте Мьёльнир, чтобы поражать врагов. Когда Тор пробужден, он может выпускать волны молний, ​​чтобы наносить урон"
+                    },
+                    {
+                        name: "БОГ ГРОМА",
+                        description: "Взлетите вверх и ударьте по земле после зарядки в течение длительности, нанося урон врагам в радиусе действия"
+                    },
+                    {
+                        name: "ШТОРМОВОЙ НАГНЕТ",
+                        description: "Удерживайте, чтобы раскрутить Мьёльнир, прежде чем броситься вперед и отбросить врагов"
+                    },
+                ],
+                PassAbilities: [
+                    {
+                        name: "МИР МОЛНИИ",
+                        description: "Вызывает молнию, которая восстанавливает силу Тора в зависимости от количества пораженных врагов."
+                    },
+                    {
+                        name: "РУНА ПРОБУЖДЕНИЯ",
+                        description: "Используйте Thorforce, чтобы войти в пробужденное состояние, что даст бонус к здоровью и усилит Мьёльнир Баш."
+                    },
+                    {
+                        name: "ТОРФОРС",
+                        description: "Потребляйте Торфорс, чтобы получить бонусное здоровье. Приземление Мьёльнир Баш на врага мгновенно перезаряжает Торфорс."
+                    },
+                ],
+                Team: [
+                    {
+                        name: "ОДИНСОН ВОЗРОЖДЕН",
+                        description: "Когда Хела наносит последний удар, побеждая врага, она может мгновенно воскресить Локи и Тора в фазе возрождения или дать им дополнительное здоровье, если они все еще живы."
+                    },
+                    {
+                        name: "ГРОМОВО БОЖЕСТВО",
+                        description: "Тор вселяет Торфорс в Шторм и Капитана Америку , давая им электризующее усиление. С электризующим усилением Шторм может выпустить молниеносный шквал. С электризующим усилением Капитан Америка получает Ускорение Движения, а его щит пропитан силой грома, поражая близлежащих врагов электрическим током."
+                    },
+                ],
+            },
+            ironfist: {
+                name: "Железный Кулак",
+                real_name: "Линь Ли (林烈)",
+                Difficult: "★ ★ ★ ★ ☆",
+                role: "Ближний бой · Скорость",
+                image: "img_heroes/Iron_Fist_Hero_Portrait.webp",
+                description: "Линь Ли — мастер китайских боевых искусств, некогда владевший сломанным мечом Фу Си. Соединив его осколки с могучей энергией Ци Шоу-Лао, он готов обрушить на врагов грацию и силу парящего дракона, став бессмертным Железным Кулаком.",
+                abilities: [
+                    {
+                        name: "ДЖИТ КУН ДО",
+                        description: "Ударьте врага с помощью Джит Кун До, сокращая время восстановления Блока и Удара с каждым ударом."
+                    },
+                    {
+                        name: "ЯТ ДЖИ ЧУНГ КУЭН",
+                        description: "Рывок вперед, чтобы преследовать выбранного врага и обрушить на него шквал атак."
+                    },
+                    {
+                        name: "ЖИВАЯ ЦИ",
+                        description: "Станьте живым Чи, чтобы увеличить свою скорость, урон и дальность атаки, нанося более сильные удары и сокращая время восстановления Защиты Дракона."
+                    },
+                    {
+                        name: "УДАР КУНЬ-ЛУНЬ",
+                        description: "Рывок вперед, нанося удар ногой в полете при попадании в противника или достигая полной дистанции, нанося урон ближайшим врагам. Урон увеличивается с уменьшением здоровья противника."
+                    },
+                ],
+                PassAbilities: [
+                    {
+                        name: "ВОССТАНОВЛЕНИЕ ГАРМОНИИ",
+                        description: "Скрестите ноги и направляйте Ци, медленно набирая бонусное здоровье."
+                    },
+                    {
+                        name: "ПРЫЖОК ЖУРАВЛЯ",
+                        description: "Выполняйте до трех последовательных прыжков в воздухе."
+                    },
+                    {
+                        name: "ЗАЩИТА ДРАКОНА",
+                        description: "Примите оборонительную стойку с усилением Чи, чтобы блокировать входящие атаки и получить снижение урона. Как только он выходит из оборонительной стойки, он получает бонусное здоровье и может нанести ответный удар с помощью Ят Джи Чунг Куэн."
+                    },
+                    {
+                        name: "НАСТЕННАЯ ДОРОЖКА",
+                        description: "Бегать горизонтально вдоль стен."
+                    },
+                    {
+                        name: "ПОГЛОЩЕНИЕ ЦИ",
+                        description: "Помощь в уничтожении врагов позволяет ему поглощать их Ци и получать бонусное здоровье."
+                    },
+                ],
+                Team: [
+                    {
+                        name: "ХОЛОД ДРАКОНА",
+                        description: "Железный кулак направляет Чи Шоу-Лао в Луну Сноу , преобразуя ее ледяную силу в пропитанное Чи морозное кольцо, которое исходит от нее. Это кольцо может отбрасывать врагов с помощью замораживающего урона и накладывать эффект замедления, одновременно исцеляя ее союзников."
+                    },
+                ],
+            },
+            venom: {
+                name: "Веном",
+                real_name: "Эдвард Чарльз Аллан «Эдди» Брок",
+                Difficult: "★ ☆ ☆ ☆ ☆",
+                role: "Средний бой · Сокрушение",
+                image: "img_heroes/Venom_Hero_Portrait.webp",
+                description: "Используя свое симбиотическое тело как идеальное живое оружие, Эдди Брок и его инопланетный союзник всегда готовы обрушить жестокие атаки на любого, кого он считает врагом. Те, кто попал в ловушку щупалец Венома, не имеют иного выбора, кроме как сдаться этому ненасытному хищнику.",
+                abilities: [
+                    {
+                        name: "ТЁМНОЕ ХИЩНИЧЕСТВО",
+                        description: "Выпустить щупальца вперед, чтобы атаковать врагов."
+                    },
+                    {
+                        name: "ПРАЗДНИК БЕЗДНЫ",
+                        description: "Закопаться под землю для свободного передвижения. По истечении времени или при нажатии кнокпки поглотить врагов выше, чтобы нанести урон, основанный на текущем здоровье врагов, и создать эквивалентное бонусное здоровье."
+                    },
+                    {
+                        name: "БЕШЕННОЕ ПРИБЫТИЕ",
+                        description: "Рывок к цели с определенной высоты. Приземлившись, наносит урон ближайшим врагам, подбрасывая их к точке приземления."
+                    },
+                ],
+                PassAbilities: [
+                    {
+                        name: "ПОЛЁТ СИМБИОТА",
+                        description: "Запустить паутину вперед, позволяя сделать одиночный взмах в желаемом направлении."
+                    },
+                    {
+                        name: "СИМБИОТИЧЕСКАЯ УСТОЙЧИВОСТЬ",
+                        description: "Генерация бонусного здоровья против урона. Чем ниже здоровье Венома, тем больше генерируемое бонусное здоровье."
+                    },
+                    {
+                        name: "ЯЧЕИСТАЯ КОРРОЗИЯ",
+                        description: "Выпустить щупальца, чтобы замедлить врагов в пределах досягаемости. Враги, не успевшие освободиться вовремя, получат урон."
+                    },
+                ],
+                Team: [
+                    {
+                        name: "ИНОПЛАНЕТНАЯ БИОЛОГИЯ",
+                        description: "Нажмите пробел, чтобы ползти по стене, и во время ползания щелкните левой кнопкой мыши, чтобы бежать."
+                    },
+                    {
+                        name: "ПРИКОСНОВЕНИЕ КЛИНТАР",
+                        description: "Веном делится частью своего симбиота с Человеком-пауком и Пени Паркер , активируя их способности симбиота. Человек-паук и Пени Паркер могут превращать симбиотов во взрывные шипы, которые наносят урон ближайшим врагам и неумолимо отбрасывают их назад."
+                    },
+                ],
+            },
+            mantis: {
+                name: "Мантис",
+                real_name: "Богомол",
+                Difficult: "★ ☆ ☆ ☆ ☆",
+                role: "Дальний бой · Контроль",
+                image: "img_heroes/Mantis_Hero_Portrait.webp",
+                description: "Мантис использует свои впечатляющие умственные способности и склонность к контролю над растениями, чтобы сплотить любую команду, с которой она сражается. Ее силы подключаются к безграничному потоку жизненной энергии, нежно питая все, к чему она прикасается.",
+                abilities: [
+                    {
+                        name: "ВЗРЫВ ЖИЗНЕННОЙ ЭНЕРГИИ",
+                        description: "Выстрел энергетическим шипом и восстановление одной сферы жизни после критического попадания."
+                    },
+                    {
+                        name: "ВОЗРОЖДЕНИЕ ДУШИ",
+                        description: "Высвобождает энергию вокруг себя во время движения, обеспечивая постепенное исцеление и ускорение движения для окружающих союзников. Избыточное исцеление преобразуется в бонусное здоровье."
+                    },
+                ],
+                PassAbilities: [
+                    {
+                        name: "СПОРА ДРЕМЛЯ",
+                        description: "Бросьте спору, чтобы усмирить ближайшего врага."
+                    },
+                    {
+                        name: "СОЮЗНОЕ ВДОХНОВЕНИЕ",
+                        description: "Используйте сферы жизни, чтобы усилить урон союзников."
+                    },
+                    {
+                        name: "ЕСТЕСТВЕННЫЙ ГНЕВ",
+                        description: "Потребляйте сферы жизни, чтобы увеличить урон."
+                    },
+                    {
+                        name: "ЦЕЛЕБНЫЙ ЦВЕТОК",
+                        description: "Используйте сферы жизни, чтобы даровать союзникам исцеление с течением времени."
+                    },
+                    {
+                        name: "БЛАГОДАРНОСТЬ ПРИРОДЫ",
+                        description: "Получайте Ускорение Движения, когда не ранены, и Исцеление С течением Времени при использовании Сфер Жизни."
+                    },
+                ],
+                Team: [
+                    {
+                        name: "ДУША ПРИРОДЫ",
+                        description: "Адам Уорлок усиливает силу возрождения Звездного Лорда и Мантиса, даруя им силу коконного возрождения."
+                    },
+                ],
+            },
+            wolverine: {
+                name: "Росомаха",
+                real_name: "Джеймс Хоулетт",
+                Difficult: "★ ★ ★ ☆ ☆",
+                role: "Ближний бой · Вампиризм",
+                image: "img_heroes/Wolverine_Hero_Portrait.webp",
+                description: "Благодаря своему регенеративному исцеляющему фактору и ярости берсерка, многовековой Логан может бороться, несмотря на сильнейшую боль, чтобы сразиться когтями с любым врагом. Росомаха готов разорвать все препятствия на своем пути своими адамантовыми когтями.",
+                abilities: [
+                    {
+                        name: "ДИКИЙ КОГОТЬ",
+                        description: "Разрежьте врагов когтями из адамантия. Использование «Дикого прыжка» на короткое время усилит его до «Удара когтями берсерка»."
+                    },
+                    {
+                        name: "ПОСЛЕДНИЙ БОЙ",
+                        description: "Подбрасывает врагов вперед в воздух и кружит в воздухе, сметая врагов по пути и нанося сокрушительный удар в точке приземления."
+                    },
+                    {
+                        name: "ДИКИЙ СКАЧОК",
+                        description: "Прыгайте, как животное, чтобы схватить первого врага при ударе и сбить его с ног. Использование этой способности на короткое время усилит его обычную атаку до «Удара когтями берсерка»."
+                    },
+                    {
+                        name: "ЗЛОБНОЕ БЕШЕНСТВО",
+                        description: "Рывок вперед и удар когтями."
+                    },
+                ],
+                PassAbilities: [
+                    {
+                        name: "БЕССМЕРТНОЕ ЖИВОТНОЕ",
+                        description: "Издайте яростный вой, чтобы ненадолго уменьшить входящий урон."
+                    },
+                    {
+                        name: "РЕГЕНЕРАТИВНЫЙ ЛЕЧЕБНЫЙ ФАКТОР",
+                        description: "Начните исцеляться и подниматься с огромным бонусным здоровьем, стряхивая все дебаффы. Через короткое время все оставшееся бонусное здоровье превращается в одноразовое лечение, обнуляя его Ярость. Помощь в нокаутах сокращает этот кулдаун."
+                    },
+                    {
+                        name: "ЯРОСТЬ БЕРСЕРКЕРА",
+                        description: "Ярость накапливается, когда Росомаха атакует или получает удары, увеличивая урон от его Ударов Когтями и бонусное Здоровье от его регенеративного лечебного фактора."
+                    },
+                ],
+                Team: [
+                    {
+                        name: "МЕТАЛЛИЧЕСКОЕ ПУШЕЧНОЕ ЯДРО",
+                        description: "Росомаха и Халк могут взаимодействовать друг с другом. После того, как обе стороны подтвердят, Халк может поднять Росомаху и нажать клавишу, чтобы швырнуть его вперед."
+                    },
+                ],
+            },
+            baki: {
+                name: "Зимний Солдат",
+                real_name: "Джеймс Бьюкенен «Баки» Барнс",
+                Difficult: "★ ★ ★ ☆ ☆",
+                role: "Комбинированный бой · Крюк",
+                image: "img_heroes/Winter_Soldier_Hero_Portrait.webp",
+                description: "Ужасающие эксперименты превратили его в убийцу с промытыми мозгами, но теперь Баки снова контролирует свою судьбу. Благодаря своей усовершенствованной механической руке Зимний солдат готов наносить сокрушительные удары любому врагу на своем пути!",
+                abilities: [
+                    {
+                        name: "РОТЕРСТЕРН",
+                        description: "Стреляет разрывными снарядами из своего бластера Ротерстен, нанося урон цели и врагам позади нее."
+                    },
+                    {
+                        name: "УДАР КРАКЕНА",
+                        description: "Прыгните высоко, затем бросьтесь вперед и ударьте бионической рукой, нанося урон врагам в радиусе действия, отмечая их для отбраковки. Отмеченные враги мгновенно погибнут, если их здоровье упадет ниже определенного порога, перезаряжая бионическую руку для еще одного удара Кракена в течение короткого периода."
+                    },
+                    {
+                        name: "КУЛАК ТРУПЕРА",
+                        description: "Рывок вперед, захватывая врагов по пути и подбрасывая их в воздух в конце рывка."
+                    },
+                    {
+                        name: "Испорченное напряжение",
+                        description: "Зарядитесь и нанесите мощный электрический удар бионической рукой в ​​выбранном направлении, нанося урон врагам в радиусе действия и замедляя их. Эта способность может сбивать с ног летающих героев."
+                    },
+                    {
+                        name: "БИОНИЧЕСКИЙ КРЮЧОК",
+                        description: "Заряжается и запускает крюк своей бионической рукой, притягивая первую пораженную цель и врагов, скрывающихся за ней."
+                    },
+                ],
+                PassAbilities: [
+                    {
+                        name: "НЕПРЕРЫВНАЯ ЗАРЯДКА",
+                        description: "Ротерстерн автоматически перезаряжается, пока бионическая рука находится в действии, давая бонусное здоровье Зимнему солдату."
+                    },
+                ],
+                Team: [
+                    {
+                        name: "БЕСКОНЕЧНЫЙ ПАТРОН",
+                        description: "Ракета бросает устройство Перезарядки патронов в направлении цели. При входе в радиус действия устройства Каратель и Зимний солдат получают баффы Бесконечный Патрон и Быстрая Стрельба."
+                    },
+                ],
+            },
+            girl: {
+                name: "Девушка-белка",
+                real_name: "Дорин Аллен Грин",
+                Difficult: "★ ☆ ☆ ☆ ☆",
+                role: "Дальний бой · Бомбы",
+                image: "img_heroes/Squirrel_Girl_Hero_Portrait.webp",
+                description: "Обладая лишь силами обычной белки, Дорин Грин каким-то образом умудряется побеждать, казалось бы, непобедимых врагов самыми неожиданными способами. Любой враг, который не учитывает ее, обязательно падет от рук Непобедимой Девочки-Белки!",
+                abilities: [
+                    {
+                        name: "ЛОПНУВШИЙ ЖЁЛУДЬ",
+                        description: "Стреляй прыгающими желудями."
+                    },
+                    {
+                        name: "БЕЛИЧЬЯ БЛОКАДА",
+                        description: "Запустите желудь, чтобы выпустить Беличьих Стражей, которые заключат пораженного врага в тюрьму."
+                    },
+                    {
+                        name: "НЕПРЕВЗОЙДЁННОЕ БЕЛИЧЬЕ ЦУНАМИ",
+                        description: "Призовите стаю белок, которые устремятся вперед, нанося урон и отскакивая от построек."
+                    },
+                ],
+                PassAbilities: [
+                    {
+                        name: "ПРЫЖОК ХВОСТА",
+                        description: "Взлетает вверх, подпрыгивая хвостом."
+                    },
+                    {
+                        name: "СВЯЗЬ С БЕЛКАМИ",
+                        description: "Перезарядите Взрывные желуди и сможете использовать способность без перезарядки один раз в короткий промежуток времени."
+                    },
+                ],
+                Team: [
+                    {
+                        name: "ПЕРЕПОНЧАТЫЙ ЖЁЛУДЬ",
+                        description: "Человек-паук дает Девушке-белке паутинную бомбу. Она может запустить ее, чтобы вызвать взрыв при контакте с окружающей средой или врагом, ненадолго обездвиживая и нанося урон врагам, попавшим под взрыв."
+                    },
+                ],
+            },
+            peni: {
+                name: "Пенни Паркер",
+                real_name: "Пенни Паркер (ペニ・パーカー)",
+                Difficult: "★ ★ ★ ★ ☆",
+                role: "Дальний бой · Контроль",
+                image: "img_heroes/Peni_Parker_Hero_Portrait.webp",
+                description: "Пени Паркер, может, и молода, но она храбро стоит на передовой, чтобы защитить Паутину Жизни и Судьбы. Вместе эта юная вундеркинд и ее новейший мех, сенсационный SP//dr, составляют самый захватывающий дуэт на поле боя!",
+                abilities: [
+                    {
+                        name: "КИБЕР-ВЕБ КЛАСТЕР",
+                        description: "Запустить Кибер-паутинный кластер."
+                    },
+                    {
+                        name: "ПАУК-ЧИСТИЛЬЩИК",
+                        description: "Улучшите костюм SP//dr, запуская врагов на своем пути и многократно развертывая арахно-мины, пауко-дроны и кибер-паутины."
+                    },
+                    {
+                        name: "БИОНИЧЕСКОЕ ПАУЧЬЕ-ГНЕЗДО",
+                        description: "Создайте гнездо пауков в указанной области, периодически порождая дронов-пауков и создавая киберпаутину. Находясь в киберпаутине, вы получаете постепенное исцеление и ускорение движения. Избыточное исцеление преобразуется в бонусное здоровье."
+                    },
+                    {
+                        name: "АРАХНО-МИНА",
+                        description: "Размещайте Арахно-Мины, которые можно спрятать в пределах Киберпаутины."
+                    },
+                ],
+                PassAbilities: [
+                    {
+                        name: "КИБЕР-ОБЛИГАЦИЯ",
+                        description: "Выстрел паутинной нитью, которая связывается с целевой областью или Кибер-паутиной. Если растянуть слишком далеко, произойдет откат."
+                    },
+                    {
+                        name: "ПОЛЗАНИЕ ПО СТЕНАМ",
+                        description: "Удерживайте «Прыжок», чтобы ползать по вертикальным поверхностям."
+                    },
+                    {
+                        name: "КИБЕР-ВЕБ-ЛОВУШКА",
+                        description: "Накладывает футуристическую паутину, которая обездвиживает врагов или создает Киберпаутину. Находясь в Киберпаутине, получает Исцеление с течением времени и Ускорение движения. Избыточное исцеление преобразуется в бонусное Здоровье."
+                    },
+                ],
+                Team: [
+                    {
+                        name: "СНЯТИЕ БРОНИ",
+                        description: "Веном делится частью своего симбиота с Человеком-пауком и Пени Паркер, активируя их способности симбиота. Человек-паук и Пени Паркер могут превращать симбиотов во взрывные шипы, которые наносят урон ближайшим врагам и неумолимо отбрасывают их назад."
+                    },
+                ],
+            },
+           groot: {
+                name: "Грут",
+                real_name: "Грут",
+                Difficult: "★ ★ ☆ ☆ ☆",
+                role: "Дальний бой · Контроль",
+                image: "img_heroes/Groot_Hero_Portrait.webp",
+                description: "Колосс флоры с Планеты X, инопланетянин, известный как Грут, демонстрирует повышенную жизненную силу и способность манипулировать всеми формами растительности. Крепкий, как возвышающееся дерево, Грут прокладывает свой собственный путь, выступая в качестве молчаливого, но надежного первопроходца команды.",
+                abilities: [
+                    {
+                        name: "ЗАБАСТОВКА ВИНОГРАДНИКОВ",
+                        description: "Запускайте лозы, чтобы атаковать врагов."
+                    },
+                    {
+                        name: "ТЮРЬМА ДУШЕНИЯ",
+                        description: "Выстреливает огромным гроздьем лозы, которое притягивает к себе ближайших врагов и заключает их в тюрьму."
+                    },
+                    {
+                        name: "СПОРОВАЯ БОМБА",
+                        description: "Бросьте взрывчатую споровую бомбу, которая разделится на несколько маленьких взрывчатых спор."
+                    },
+                ],
+                PassAbilities: [
+                    {
+                        name: "ТЕРНОВАЯ СТЕНА",
+                        description: "Выберите место и вырастите Стену Шипов. При пробуждении она поражает ближайших врагов, атакованных Грутом и его союзниками."
+                    },
+                    {
+                        name: "СТЕНА ИЗ ЖЕЛЕЗНОГО ДЕРЕВА",
+                        description: "Выберите место и вырастите Стену из железного дерева. Когда стена пробуждена, урон, нанесенный Грутом и ближайшими союзниками, дает Груту бонусное здоровье."
+                    },
+                    {
+                        name: "ФЛОРА КОЛОСС",
+                        description: "Деревянные стены рядом с Грутом пробудятся, активируя дополнительный эффект. Щелкните правой кнопкой мыши во время строительства деревянной стены, чтобы продолжить строительство дополнительных стен."
+                    },
+                    {
+                        name: "ЯРОСТЬ ФЛОРЫ",
+                        description: "Выполните комбо руками, а третий удар слегка подбросит пораженного противника в воздух."
+                    },
+                ],
+                Team: [
+                    {
+                        name: "ДРУЖЕСКОЕ ПЛЕЧО",
+                        description: "Джефф, сухопутная акула и ракетный енот могут ездить на плечах Грута, получая снижение урона."
+                    },
+                ],
+            },
+            luna: {
+                name: "Луна Сноу",
+                real_name: "Соль Хи (설희)",
+                Difficult: "★ ★ ☆ ☆ ☆",
+                role: "Дальний бой · Исцеление",
+                image: "img_heroes/Luna_Snow_Hero_Portrait.webp",
+                description: "В равной степени поп-звезда и супергерой, Луна Сноу устраивает ослепительное шоу, используя как свои светлые, так и темные ледяные силы. Арена — это ее сцена, где Соль Хи и ее команда организуют захватывающие представления, которые приносят ей все больше поклонников и побед.",
+                abilities: [
+                    {
+                        name: "СВЕТЛЫЙ И ТЕМНЫЙ ЛЕД",
+                        description: "Выстрелы из ледяного оружия, наносящие урон врагам или исцеляющие союзников."
+                    },
+                    {
+                        name: "СУДЬБА ОБОИХ МИРОВ",
+                        description: "Встаньте в центр сцены и начните танцевать! Нажмите, чтобы переключиться между двумя выступлениями: исцелить союзников или дать им усиление урона."
+                    },
+                    {
+                        name: "ЛЕДЯНОЕ ИСКУССТВО",
+                        description: "Огненные ледяные осколки на короткое время, нанося урон врагам или исцеляя союзников, восстанавливая при этом свое Здоровье."
+                    },
+                    {
+                        name: "АБСОЛЮТНЫЙ НОЛЬ",
+                        description: "Бросьте кусок льда, чтобы заморозить пораженного врага и восстановить Здоровье."
+                    },
+                ],
+                PassAbilities: [
+                    {
+                        name: "ПЛАВНОЕ КАТАНИЕ",
+                        description: "Продолжайте двигаться вперед, чтобы начать кататься на коньках и делать более высокие прыжки."
+                    },
+                    {
+                        name: "КРИО СЕРДЦЕ",
+                        description: "Автоматически восстанавливает Здоровье при применении Ice Arts или Absolute Zero ."
+                    },
+                ],
+                Team: [
+                    {
+                        name: "ЗИМНИЙ ХОЛОД",
+                        description: "Луна Сноу дарует Железному Кулаку способность «Зимняя стужа » . Когда Железный Кулак активирует «Восстановление гармонии» , он может исцелять ближайших союзников с помощью Лунной Ци ."
+                    },
+                    {
+                        name: "СВЕТ И ТЕНЬ КАРМА",
+                        description: "Адам Уорлок передаёт Луне Сноу своё мастерство владения квантовой энергией, пробуждая её новую способность «Светлая и Тёмная Карма» . Когда Луна использует «Светлую и Тёмную Карму» , она связывается с ближайшими врагами. Любой урон, наносимый ею связанным врагам, преобразуется в Энергию Света, которая затем передаётся Луне по этой связи, восстанавливая её Здоровье."
+                    },
+                ],
+            },
+            hela: {
+            name: "Локи",
+                real_name: "Локи Лауфейсон",
+                Difficult: "★ ★ ★ ★ ☆",
+                role: "Дальний бой · Копии",
+                image: "img_heroes/Hela_Hero_Portrait.webp",
+                description: "Богиня смерти и правительница Хельхейма, Хела вооружена магией некропсии, способной создавать оружие из чистой энергии. Её сила растёт на поле боя, где царит хаос и гибель.",
+    abilities: [
+        {
+            name: "МЕЧИ ХЕЛЬХЕЙМА",
+            description: "Создает и бросает энергетические клинки, наносящие урон по прямой траектории."
+        },
+        {
+            name: "ВОСХОЖДЕНИЕ КОРОЛЕВЫ",
+            description: "Пассивно накапливает силу от смертей вокруг. При активации усиливает все способности и наносит урон по области при приземлении."
+        },
+        {
+            name: "УЗЫ СМЕРТИ",
+            description: "Бросает магические оковы, которые на короткое время сковывают и оглушают врага."
+        },
+        {
+            name: "ГНЕВ ХЕЛЬХЕЙМА",
+            description: "Призывает волну духов погибших воинов, которые пронзают врагов на своём пути, нанося огромный урон."
+        },
+    ],
+    PassAbilities: [
+        {
+            name: "ВЛАСТЬ НАД МЁРТВЫМИ",
+            description: "Побежденные враги временно становятся союзниками Хелы, сражаясь на её стороне."
+        },
+        {
+            name: "НЕКРОТИЧЕСКАЯ АУРА",
+            description: "Враги рядом с Хелой теряют здоровье с течением времени."
+        },
+    ],
+    Team: [
+        {
+            name: "ЛАУФЕЙСОН ВОЗРОЖДЁН",
+            description: "Когда Хела наносит последний удар, побеждая врага, она может мгновенно воскресить Локи и Тора в фазе возрождения или дать им дополнительное здоровье, если они все еще живы."
+        },
+        {
+            name: "ТРИУМВИРАТ СМЕРТИ",
+            description: "Хела усиливает способности Таноса и Танатоса, увеличивая их урон и защиту в ближнем бою."
+        },
+    ],
+},
+
+        hawkeye: {
+            name: "Соколиный Глаз",
+            real_name: "Клинт Бартон",
+            Difficult: "★ ★ ☆ ☆ ☆",
+            role: "Дальний бой · Ослабление",
+            image: "img_heroes/hawkeye.png",
+            description: "Мастер-лучник с невероятной меткостью и тактическим мышлением. Использует широкий арсенал специальных стрел для поддержки команды и подавления врагов.",
+    abilities: [
+        {
+            name: "ТАКТИЧЕСКИЙ ЛУК",
+            description: "Ведущий огонь из высокотехнологичного лука. Можно прицеливаться для более точного и мощного выстрела."
+        },
+        {
+            name: "ГРАНАТА-ЛИПУЧКА",
+            description: "Бросает гранату, которая прилипает к поверхностям и врагам, взрываясь через короткое время."
+        },
+        {
+            name: "ШОКОВАЯ СТРЕЛА",
+            description: "Выпускает стрелу, которая при попадании оглушает цель и наносит урон по небольшой области."
+        },
+        {
+            name: "ШКВАЛ СТРЕЛ",
+            description: "Активирует автоматический релиз, позволяющий выпускать быстрые очереди стрел без перезарядки на короткое время."
+        },
+    ],
+    PassAbilities: [
+        {
+            name: "МЕТКИЙ ГЛАЗ",
+            description: "Критические попадания наносят дополнительный урон и замедляют цель."
+        },
+        {
+            name: "ТАКТИЧЕСКОЕ ОТСТУПЛЕНИЕ",
+            description: "Перекат с увеличением скорости передвижения после использования."
+        },
+    ],
+    Team: [
+        {
+            name: "МСТИТЕЛИ: СНАЙПЕРСКАЯ ПОДДЕРЖКА",
+            description: "Соколиный Глаз отмечает цели для Чёрной Вдовы и Железного человека, увеличивая их урон по отмеченным врагам."
+        },
+        {
+            name: "СТРЕЛКОВЫЙ ДУЭТ",
+            description: "Вместе с Карателем образует огневую команду, увеличивая скорострельность обоих."
+        },
+    ],
+},
+
+        jeff: {
+            name: "Джефф, сухопутная акула",
+            real_name: "Джефф",
+            Difficult: "★ ★ ★ ★ ☆",
+            role: "Дальний бой · Контроль",
+            image: "img_heroes/jeff.jpg",
+            description: "Загадочная и очаровательная сухопутная акула, Джефф обладает уникальными способностями контроля территории. Он создаёт области, которые влияют на передвижение и способности врагов.",
+    abilities: [
+        {
+            name: "ВОДНЫЙ ВЫСТРЕЛ",
+            description: "Выплёвывает сфокусированную струю воды, наносящую урон и слегка отталкивающую врагов."
+        },
+        {
+            name: "ЛУЖА СКОЛЬЖЕНИЯ",
+            description: "Создает на земле скользкую лужу, которая заставляет врагов терять управление и замедляет их."
+        },
+        {
+            name: "ВОДЯНОЙ КУПОЛ",
+            description: "Создаёт защитный купол из воды, который блокирует вражеские снаряды и замедляет врагов, входящих в него."
+        },
+        {
+            name: "ПРИЛИВНАЯ ВОЛНА",
+            description: "Призывает мощную волну, которая проносится по местности, отбрасывая врагов и нанося значительный урон."
+        },
+    ],
+    PassAbilities: [
+        {
+            name: "ВОДНАЯ СРЕДА",
+            description: "Увеличение скорости передвижения и восстановления здоровья в водных областях."
+        },
+        {
+            name: "ПЛАВНИКОВЫЙ РЫВОК",
+            description: "Ускоренное движение по созданным водным поверхностям."
+        },
+    ],
+    Team: [
+        {
+            name: "ДРУЖЕСКОЕ ПЛЕЧО",
+            description: "Джефф, сухопутная акула и ракетный енот могут ездить на плечах Грута, получая снижение урона."
+        },
+        {
+            name: "МОРСКАЯ СИМФОНИЯ",
+            description: "Вместе с Нэмором создаёт мощные водные комбинации, увеличивая силу водных способностей."
+        },
+    ],
+},
+
+        storm: {
+            name: "Шторм",
+            real_name: "Ороро Монро",
+            Difficult: "★ ★ ★ ☆ ☆",
+            role: "Дальний бой · Усиление",
+            image: "img_heroes/Storm_HeroPortrait.webp",
+            description: "Мутант, способная управлять погодой, Шторм использует молнии, ветер и дождь, чтобы доминировать на поле боя и усиливать союзников.",
+    abilities: [
+        {
+            name: "МОЛНИЕВЫЙ ШАР",
+            description: "Бросает сгусток электрической энергии, который наносит урон при попадании."
+        },
+        {
+            name: "ВЕТРЯНОЙ ПОРЫВ",
+            description: "Создает мощный поток ветра, который отталкивает врагов и может изменять траекторию снарядов."
+        },
+        {
+            name: "ОКО БУРИ",
+            description: "Создает зону спокойной погоды вокруг себя, которая постепенно исцеляет союзников и увеличивает скорость их передвижения."
+        },
+        {
+            name: "ГНЕВ НЕБЕС",
+            description: "Призывает масштабную грозу над выбранной областью, которая наносит непрерывный урон множественными ударами молний."
+        },
+    ],
+    PassAbilities: [
+        {
+            name: "КОНТРОЛЬ ПОГОДЫ",
+            description: "Пассивно изменяет погоду на поле боя, давая случайные баффы союзникам."
+        },
+        {
+            name: "ЭЛЕКТРИЧЕСКАЯ КОНВЕРСИЯ",
+            description: "Часть полученного урона преобразуется в электрическую энергию для усиления следующих атак."
+        },
+    ],
+    Team: [
+        {
+            name: "ГРОМОВОЕ БОЖЕСТВО",
+            description: "Тор вселяет Торфорс в Шторм и Капитана Америку, давая им электризующее усиление."
+        },
+        {
+            name: "СИЛА ПРИРОДЫ",
+            description: "Вместе с Грутом создаёт природные катастрофы, увеличивая урон и область эффектов."
+        },
+    ],
+},
+
+        magneto: {
+            name: "Магнето",
+            real_name: "Эрик Леншерр",
+            Difficult: "★ ★ ★ ★ ☆",
+            role: "Дальний бой · Щиты",
+            image: "img_heroes/Magneto_Hero_Portrait.webp",
+            description: "Властелин магнитных полей, Магнето манипулирует металлом с невероятной точностью. Он создаёт щиты, управляет позицией врагов и наносит разрушительный урон.",
+    abilities: [
+        {
+            name: "МАГНИТНЫЕ СФЕРЫ",
+            description: "Выстреливает сгустками магнитной энергии, которые наносят урон и слегка притягивают врагов к точке попадания."
+        },
+        {
+            name: "МЕТАЛЛИЧЕСКИЙ БАРЬЕР",
+            description: "Создаёт прочную стену из сжатого металла, блокирующую проход и атаки."
+        },
+        {
+            name: "МАГНИТНЫЙ ИМПУЛЬС",
+            description: "Испускает волну магнитной энергии, которая наносит урон, отталкивает врагов и временно разрушает щиты."
+        },
+        {
+            name: "ЖЕЛЕЗНЫЙ КУЛАК",
+            description: "Собирает окружающий металл в гигантский кулак, который сокрушает врагов на своём пути, нанося огромный урон и оглушая."
+        },
+    ],
+    PassAbilities: [
+        {
+            name: "МАГНИТНОЕ ПОЛЕ",
+            description: "Создает защитное поле, которое уменьшает урон от снарядов."
+        },
+        {
+            name: "МЕТАЛЛОКИНЕЗ",
+            description: "Увеличение урона по механическим целям и бронированным врагам."
+        },
+    ],
+    Team: [
+        {
+            name: "БРАТЬЯ ПО МЕТАЛЛУ",
+            description: "Усиливает способности Колосса и Стального Патриота, улучшая их броню и урон."
+        },
+        {
+            name: "МАГНИТНАЯ СИНЕРГИЯ",
+            description: "Вместе с Железным человеком создаёт мощные электромагнитные импульсы."
+        },
+    ],
+},
+
+        starlord: {
+            name: "Звёздный Лорд",
+            real_name: "Питер Квилл",
+            Difficult: "★ ★ ☆ ☆ ☆",
+            role: "Комбинированный бой · Скорость",
+            image: "img_heroes/star.jpg",
+            description: "Лидер Стражи Галактики, мастер тактики и пилот. Использует реактивные сапоги для мобильности и парные бластеры для ведения скоростного боя.",
+    abilities: [
+        {
+            name: "ЭЛЕМЕНТНЫЕ БЛАСТЕРЫ",
+            description: "Парные бластеры, ведущие автоматический огонь. Можно переключать режимы урона."
+        },
+        {
+            name: "РЕАКТИВНЫЙ РЫВОК",
+            description: "Совершает быстрый рывок в направлении движения, уклоняясь от атак."
+        },
+        {
+            name: "ГРАВИТАЦИОННАЯ МИНА",
+            description: "Бросает мину, которая при активации притягивает nearby врагов к себе и наносит урон."
+        },
+        {
+            name: "КОНЦЕРТ ХИТОВ",
+            description: "Активирует усилитель на своём шлеме, создавая волну звуковой энергии, которая наносит урон и оглушает врагов в большой области."
+        },
+    ],
+    PassAbilities: [
+        {
+            name: "КАССЕТНЫЙ ПЛЕЕР",
+            description: "Воспроизведение музыки увеличивает характеристики Звёздного Лорда и nearby союзников."
+        },
+        {
+            name: "ПИЛОТ-АС",
+            description: "Увеличение точности и критического урона при стрельбе в движении."
+        },
+    ],
+    Team: [
+        {
+            name: "СТРАЖИ ГАЛАКТИКИ",
+            description: "Вместе с Ракетой, Грутом и Мантис создаёт уникальные командные атаки."
+        },
+        {
+            name: "МУЗЫКАЛЬНАЯ СИЛА",
+            description: "Усиливает способности Луны Сноу и других героев с музыкальными темами."
+        },
+    ],
+},
+
+        thing: {
+            name: "Существо",
+            real_name: "Бен Гримм",
+            Difficult: "★ ★ ☆ ☆ ☆",
+            role: "Ближний бой · Живучесть",
+            image: "img_heroes/thing.jpg",
+            abilities: [
+        {
+            name: "КАМЕННЫЙ КУЛАК",
+            description: "Мощные удары кулаками, наносящие значительный урон в ближней зоне."
+        },
+        {
+            name: "ИТАК, ПОГНАЛИ!",
+            description: "Наклоняется вперёд и начинает быстро катиться, сбивая врагов на своём пути и нанося урон."
+        },
+        {
+            name: "КРЕПОСТЬ ИЗ КАМНЯ",
+            description: "Принимает оборонительную стойку, значительно снижая получаемый урон и становясь невосприимчивым к эффектам отбрасывания."
+        },
+        {
+            name: "ЗЕМЛЕТРЯСЕНИЕ",
+            description: "Бьёт по земле с такой силой, что создаёт сейсмическую волну, которая оглушает врагов и наносит урон по области."
+        },
+    ],
+    PassAbilities: [
+        {
+            name: "КАМЕННАЯ БРОНЯ",
+            description: "Пассивное увеличение защиты и сопротивления эффектам контроля."
+        },
+        {
+            name: "НЕСОКРУШИМЫЙ",
+            description: "При низком здоровье получает дополнительную защиту и снижение урона."
+        },
+    ],
+    Team: [
+        {
+            name: "ФАНТАСТИЧЕСКАЯ ЧЕТВЁРКА",
+            description: "Вместе с Мистером Фантастиком, Человеком-Факелом и Женщиной-невидимкой создаёт мощные комбо-атаки."
+        },
+        {
+            name: "КАМЕННЫЕ СОЮЗНИКИ",
+            description: "Усиливает способности Грута и других героев с каменными или земляными способностями."
+        },
+    ],
+},
+
+        scarlet: {
+            name: "Алая Ведьма",
+            real_name: "Ванда Максимофф",
+            Difficult: "★ ★ ★ ★ ☆",
+            role: "Дальний бой · Разрушение",
+            image: "img_heroes/Scarlet_Witch_Hero_Portrait.webp",
+            description: "Обладающая хаотичной магией реальности, Ванда искажает пространство вокруг себя. Её силы непредсказуемы и способны изменять саму структуру поля боя.",
+    abilities: [
+        {
+            name: "ХАОС-ЭНЕРГИЯ",
+            description: "Выпускает снаряды хаотической энергии, которые наносят урон и слегка меняют траекторию при полёте."
+        },
+        {
+            name: "ИСКАЖЕНИЕ ПОЛЯ",
+            description: "Создаёт нестабильную зону, которая замедляет врагов внутри и периодически наносит им урон."
+        },
+        {
+            name: "ВОЛНА РЕАЛЬНОСТИ",
+            description: "Испускает волну магии, которая временно дезориентирует врагов, меняя элементы управления на обратные."
+        },
+        {
+            name: "ХАОС-РИФТ",
+            description: "Открывает портал в измерение хаоса, который затягивает nearby врагов, наносит им огромный урон и случайным образом телепортирует их на короткое расстояние."
+        },
+    ],
+    PassAbilities: [
+        {
+            name: "ХАОТИЧЕСКАЯ АУРА",
+            description: "Враги рядом с Алой Ведьмой имеют шанс получить случайные негативные эффекты."
+        },
+        {
+            name: "ИСКАЖЕНИЕ РЕАЛЬНОСТИ",
+            description: "Шанс отразить входящие снаряды или изменить их траекторию."
+        },
+    ],
+    Team: [
+        {
+            name: "МАГИЧЕСКИЙ ДУЭТ",
+            description: "Вместе с Доктором Стрэнджем создаёт мощные магические комбинации."
+        },
+        {
+            name: "МАКСИМОФФЫ",
+            description: "С Пьетро Максимоффом (Ртуть) образует скоростные магические атаки."
+        },
+    ],
+},
+
+        namor: {
+            name: "Нэмор",
+            real_name: "Нэмор Маккензи",
+            Difficult: "★ ★ ★ ☆ ☆",
+            role: "Дальний бой · Турель",
+            image: "img_heroes/namor.png",
+            description: "Гибрид человека и атланта, король подводного царства. Использует трезубец и технологии Атлантиды для создания оборонительных сооружений и контроля водной стихии.",
+    abilities: [
+        {
+            name: "ЭНЕРГИЯ ТРЕЗУБЦА",
+            description: "Выстреливает сгустками энергии из трезубца, наносящими урон на средней дистанции."
+        },
+        {
+            name: "АТЛАНТИЙСКАЯ ТУРЕЛЬ",
+            description: "Размещает автоматическую энергетическую турель, которая стреляет по nearby врагам."
+        },
+        {
+            name: "ПРИЗЫВ ВОЛНЫ",
+            description: "Призывает водяную волну, которая наносит урон и отбрасывает врагов, которых задевает."
+        },
+        {
+            name: "ГНЕВ ОКЕАНА",
+            description: "Призывает древнего левиафана Атлантиды, который появляется из-под земли и атакует врагов на большой площади, нанося массивный урон и подбрасывая их в воздух."
+        },
+    ],
+    PassAbilities: [
+        {
+            name: "ВОДНЫЙ ДЫХАТЕЛЬНЫЙ АППАРАТ",
+            description: "Может находиться под водой неограниченное время и получает там усиление."
+        },
+        {
+            name: "КОРОЛЬ АТЛАНТИДЫ",
+            description: "Увеличение характеристик при сражении в водной среде или рядом с водой."
+        },
+    ],
+    Team: [
+        {
+            name: "МОРСКИЕ СОЮЗНИКИ",
+            description: "Вместе с Джеффом и другими водными героями создаёт мощные водные комбинации."
+        },
+        {
+            name: "АТЛАНТИЙСКИЕ ТЕХНОЛОГИИ",
+            description: "Улучшает технологические способности Железного человека и других героев."
+        },
+    ],
+},
+
+        psylocke: {
+            name: "Псайлок",
+            real_name: "Сай (サイ)",
+            Difficult: "★ ★ ★ ★ ☆",
+            role: "Комбинированный бой · Невидимость",
+            image: "img_heroes/Psylocke_Hero_Portrait.webp",
+            description: "Мутант-телепат и мастер боевых искусств. Создаёт пси-клинки для атаки, может становиться невидимой и наносить смертоносные удары из тени.",
+    abilities: [
+        {
+            name: "ПСИ-КЛИНКИ",
+            description: "Создаёт клинки из психической энергии для быстрых атак в ближнем и среднем бою."
+        },
+        {
+            name: "ПСИХИЧЕСКИЙ КАМУФЛЯЖ",
+            description: "Становится невидимой для врагов на короткое время. Атака или использование способностей срывают эффект."
+        },
+        {
+            name: "ТЕЛЕПАТИЧЕСКИЙ УДАР",
+            description: "Наносит направленный пси-удар, который оглушает цель и наносит урон."
+        },
+        {
+            name: "ПСИХИЧЕСКИЙ ВЗРЫВ",
+            description: "Фокусирует всю свою психическую энергию и выпускает её во взрывной волне, нанося огромный урон всем врагам в большой области перед собой."
+        },
+    ],
+    PassAbilities: [
+        {
+            name: "ТЕЛЕПАТИЧЕСКОЕ ВОСПРИЯТИЕ",
+            description: "Видит врагов через стены на небольшой дистанции."
+        },
+        {
+            name: "ПСИХИЧЕСКАЯ ЗАЩИТА",
+            description: "Снижает урон от психических атак и эффектов контроля."
+        },
+    ],
+    Team: [
+        {
+            name: "ТЕЛЕПАТИЧЕСКАЯ СВЯЗЬ",
+            description: "Вместе с Профессором Икс и другими телепатами создаёт мощные психические атаки."
+        },
+        {
+            name: "НИНДЗЯ-МУТАНТЫ",
+            description: "С Волверном и другими бойцами ближнего боя образует смертоносные комбо."
+        },
+    ],
+},
+
+        cloakdagger: {
+            name: "Плащ и Кинжал",
+            real_name: "Тирон Джонсон и Тэнди Боуэн",
+            Difficult: "★ ★ ★ ★ ★",
+            role: "Комбинированный бой · Уникальность",
+            image: "img_heroes/Cloak_N_Dagger_Hero_Portrait.webp",
+            description: "Дуэт героев с контрастными силами: Плащ управляет тьмой и телепортацией, Кинжал создаёт световые кинжалы. Они сражаются как единое целое, переключаясь между формами.",
+    abilities: [
+        {
+            name: "СВЕТ И ТЬМА",
+            description: "В форме Кинжал: метает световые кинжалы. В форме Плащ: стреляет сгустками темноты."
+        },
+        {
+            name: "ПЕРЕКЛЮЧЕНИЕ",
+            description: "Мгновенно меняет активную форму с Кинжал на Плащ или обратно, каждая форма имеет уникальный набор способностей."
+        },
+        {
+            name: "ТЕМНЫЙ ПОРТАЛ (Плащ)",
+            description: "Создаёт портал в тени, позволяющий телепортироваться к нему или телепортировать союзника."
+        },
+        {
+            name: "СВЕТОНОСНЫЙ ВЗРЫВ (Кинжал)",
+            description: "Накапливает световую энергию и выпускает её в ослепительной вспышке, которая наносит урон и оглушает врагов в области."
+        },
+    ],
+    PassAbilities: [
+        {
+            name: "СИМБИОЗ",
+            description: "Пассивное усиление характеристик при нахождении рядом с другим героем дуэта."
+        },
+        {
+            name: "ДВОЙСТВЕННОСТЬ",
+            description: "Переключение форм даёт временное усиление способностей новой формы."
+        },
+    ],
+    Team: [
+        {
+            name: "СВЕТ И ТЬМА",
+            description: "Вместе с другими героями, использующими светлые и тёмные силы, создаёт уникальные комбинации."
+        },
+        {
+            name: "ДУЭТЫ",
+            description: "Усиливает способности других парных героев, таких как Братья Райт."
+        },
+    ],
+        },
+
+        human_torch: {
+            name: "Человек-Факел",
+            real_name: "Джонни Шторм",
+            Difficult: "★ ★ ★ ☆ ☆",
+            role: "Дальний бой · Область",
+            image: "img_heroes/torch.jpg",
+           description: "Член Фантастической четвёрки, способный к полёту, пирокинезу и созданию огненных конструкций. Высокомобильный заклинатель, специализирующийся на уроне по области.",
+    abilities: [
+        {
+            name: "ОГНЕННЫЙ ЗАЛП",
+            description: "Выстреливает очередями пламени, нанося урон по площади перед собой."
+        },
+        {
+            name: "НОВАЯ ВСПЫШКА",
+            description: "Взрывается пламенем, отталкивая nearby врагов и нанося урон. Может быть использован в воздухе."
+        },
+        {
+            name: "ОГНЕННЫЙ ШАР",
+            description: "Заряжает и запускает большой огненный шар, который взрывается при контакте, нанося значительный урон по области."
+        },
+        {
+            name: "СУПЕРНОВА",
+            description: "Взлетает в воздух и обрушивает на выбранную область шквал пламени, непрерывно нанося огромный урон всем, кто находится внутри."
+        },
+    ],
+    PassAbilities: [
+        {
+            name: "ПЛАМЕННАЯ АУРА",
+            description: "Враги вблизи Человека-Факела получают периодический урон от огня."
+        },
+        {
+            name: "ВОЗДУШНОЕ ПРЕВОСХОДСТВО",
+            description: "Увеличение урона и точности при атаках с воздуха."
+        },
+    ],
+    Team: [
+        {
+            name: "ФАНТАСТИЧЕСКАЯ ЧЕТВЁРКА",
+            description: "Вместе с другими членами Фантастической четвёрки создаёт мощные комбо-атаки."
+        },
+        {
+            name: "ОГНЕННЫЕ СОЮЗНИКИ",
+            description: "Усиливает способности других пирокинетиков, таких как Пиро и Алая Ведьма."
+        },
+    ],
+},
+
+        fantastic: {
+            name: "Мистер Фантастик",
+            real_name: "Рид Ричардс",
+            Difficult: "★ ★ ★ ☆ ☆",
+            role: "Комбинированный бой · Живучесть",
+            image: "img_heroes/mister.jpg",
+            description: "Лидер Фантастической четвёрки, обладающий эластичным телом. Может растягивать конечности для атаки на расстоянии, принимать различные формы и демонстрировать невероятную устойчивость.",
+            description: "Лидер Фантастической четвёрки, обладающий эластичным телом. Может растягивать конечности для атаки на расстоянии, принимать различные формы и демонстрировать невероятную устойчивость.",
+    abilities: [
+        {
+            name: "ЭЛАСТИЧНЫЙ УДАР",
+            description: "Наносит растягивающийся удар кулаком, поражающий врагов на средней дистанции."
+        },
+        {
+            name: "ПАРАШЮТ-ПЛАНЕР",
+            description: "Преобразует своё тело в форму планера, позволяя парить над землёй и замедлять падение."
+        },
+        {
+            name: "РЕЗИНОВЫЙ ШАР",
+            description: "Сворачивается в упругий шар и катится вперёд, отскакивая от стен и сбивая врагов."
+        },
+        {
+            name: "УНИВЕРСАЛЬНЫЙ КОНСТРУКТОР",
+            description: "Использует свой гений и эластичность, чтобы создать гигантскую эластичную катапульту или батут для всей команды, позволяя союзникам быстро перемещаться по карте."
+        },
+    ],
+    PassAbilities: [
+        {
+            name: "ЭЛАСТИЧНОСТЬ",
+            description: "Уменьшение урона от падений и отбрасывания, возможность проходить через узкие проходы."
+        },
+        {
+            name: "ГЕНИАЛЬНЫЙ УМ",
+            description: "Быстрее перезаряжает способности союзников и увеличивает эффективность их технологий."
+        },
+    ],
+    Team: [
+        {
+            name: "ФАНТАСТИЧЕСКАЯ ЧЕТВЁРКА",
+            description: "Вместе с другими членами Фантастической четвёрки создаёт уникальные командные атаки."
+        },
+        {
+            name: "НАУЧНОЕ СОТРУДНИЧЕСТВО",
+            description: "Усиливает технологические способности Железного человека и других учёных-героев."
+        },
+    ],
+},
+
+        moonknight: {
+            name: "Лунный Рыцарь",
+            real_name: "Марк Спектор",
+            Difficult: "★ ★ ★ ☆ ☆",
+            role: "Дальний бой · Область",
+            image: "img_heroes/moon.png",
+            description: "Воин, наделённый силой египетского бога луны Хонсу. Его силы и решимость колеблются вместе с фазами луны. Сражается метательными капюшонами и древним оружием.",
+    abilities: [
+        {
+            name: "СЕРПЫ КОНСУ",
+            description: "Метает парные серповидные клинки, которые наносят урон и возвращаются к нему."
+        },
+        {
+            name: "ПРИЗЫВ ЛУНЫ",
+            description: "Активирует текущую лунную фазу, дающую временное усиление (например, увеличение урона, скорости или восстановления здоровья)."
+        },
+        {
+            name: "ГРАД КАПЮШОНОВ",
+            description: "Бросает веер из нескольких капюшонов, которые наносят урон по широкой области."
+        },
+        {
+            name: "СУД ХОНСУ",
+            description: "Призывает силу Хонсу, окружая себя аурой лунного света, которая непрерывно наносит урон nearby врагам и усиливает его базовые атаки."
+        },
+    ],
+    PassAbilities: [
+        {
+            name: "ЛУННЫЙ ЦИКЛ",
+            description: "Пассивное изменение характеристик в зависимости от текущей фазы луны на карте."
+        },
+        {
+            name: "МНОЖЕСТВЕННАЯ ЛИЧНОСТЬ",
+            description: "Шанс игнорировать негативные эффекты или получить случайное усиление."
+        },
+    ],
+    Team: [
+        {
+            name: "НОЧНЫЕ ОХОТНИКИ",
+            description: "Вместе с другими ночными героями, такими как Блэйд и Дэрдевил, получает усиление в тёмных областях."
+        },
+        {
+            name: "БОЖЕСТВЕННЫЕ СОЮЗНИКИ",
+            description: "Усиливает способности других героев, связанных с древними богами и мистикой."
+        },
+    ],
+        },
+
+        adam: {
+            name: "Адам Уорлок",
+            real_name: "Адам Уорлок",
+            Difficult: "★ ★ ★ ★ ☆",
+            role: "Дальний бой · Возрождение",
+            image: "img_heroes/Adam_Warlock_Hero_Portrait.webp",
+            description: "Искусственно созданный совершенный человек, связанный с Камнем Души. Исцеляет союзников, защищает их и обладает способностью предотвратить смерть или даже вернуть павшего товарища к жизни.",
+    abilities: [
+        {
+            name: "ЭНЕРГИЯ ДУШИ",
+            description: "Выпускает потоки энергии Камня Души, которые наносят умеренный урон врагам или исцеляют союзников."
+        },
+        {
+            name: "МИСТИЧЕСКАЯ СФЕРА",
+            description: "Создает защитную сферу вокруг союзника, которая поглощает определённое количество урона."
+        },
+        {
+            name: "НИТЬ СУДЬБЫ",
+            description: "Связывает себя с союзником. Пока связь активна, часть урона, получаемого союзником, передаётся Адаму, а Адам делится с ним частью своего исцеления."
+        },
+        {
+            name: "ВОЗВРАЩЕНИЕ ДУШИ",
+            description: "Нацеливается на недавно павшего союзника. Если способность завершить каст до истечения таймера возрождения, союзник мгновенно воскрешается на месте с частью здоровья."
+        },
+    ],
+    PassAbilities: [
+        {
+            name: "КАМЕНЬ ДУШИ",
+            description: "Пассивное восстановление здоровья nearby союзников и усиление их духовных способностей."
+        },
+        {
+            name: "СОВЕРШЕННЫЙ ОРГАНИЗМ",
+            description: "Устойчивость к большинству негативных эффектов и быстрое восстановление здоровья."
+        },
+    ],
+    Team: [
+        {
+            name: "БЕСКОНЕЧНОСТЬ",
+            description: "Вместе с другими существами, связанными с Камнями Бесконечности, создаёт мощные космические эффекты."
+        },
+        {
+            name: "КОСМИЧЕСКИЕ СУЩЕСТВА",
+            description: "Усиливает способности других космических героев, таких как Серебряный Сёрфер и Галактус."
+        },
+    ],
+},
+
+        spiderman: {
+            name: "Человек-Паук",
+            real_name: "Питер Паркер",
+            Difficult: "★ ★ ★ ★ ★",
+            role: "Ближний бой · Мобильность",
+            image: "img_heroes/Spider-Man_Hero_Portrait.webp",
+            description: "Искусственно созданный совершенный человек, связанный с Камнем Души. Исцеляет союзников, защищает их и обладает способностью предотвратить смерть или даже вернуть павшего товарища к жизни.",
+    abilities: [
+        {
+            name: "ЭНЕРГИЯ ДУШИ",
+            description: "Выпускает потоки энергии Камня Души, которые наносят умеренный урон врагам или исцеляют союзников."
+        },
+        {
+            name: "МИСТИЧЕСКАЯ СФЕРА",
+            description: "Создает защитную сферу вокруг союзника, которая поглощает определённое количество урона."
+        },
+        {
+            name: "НИТЬ СУДЬБЫ",
+            description: "Связывает себя с союзником. Пока связь активна, часть урона, получаемого союзником, передаётся Адаму, а Адам делится с ним частью своего исцеления."
+        },
+        {
+            name: "ВОЗВРАЩЕНИЕ ДУШИ",
+            description: "Нацеливается на недавно павшего союзника. Если способность завершить каст до истечения таймера возрождения, союзник мгновенно воскрешается на месте с частью здоровья."
+        },
+    ],
+    PassAbilities: [
+        {
+            name: "КАМЕНЬ ДУШИ",
+            description: "Пассивное восстановление здоровья nearby союзников и усиление их духовных способностей."
+        },
+        {
+            name: "СОВЕРШЕННЫЙ ОРГАНИЗМ",
+            description: "Устойчивость к большинству негативных эффектов и быстрое восстановление здоровья."
+        },
+    ],
+    Team: [
+        {
+            name: "БЕСКОНЕЧНОСТЬ",
+            description: "Вместе с другими существами, связанными с Камнями Бесконечности, создаёт мощные космические эффекты."
+        },
+        {
+            name: "КОСМИЧЕСКИЕ СУЩЕСТВА",
+            description: "Усиливает способности других космических героев, таких как Серебряный Сёрфер и Галактус."
+        },
+    ],
+},
+
+        strange: {
+    name: "Доктор Стрэндж",
+    real_name: "Стивен Стрэндж",
+    Difficult: "★ ★ ★ ★ ☆",
+    role: "Дальний бой · Порталы",
+    image: "img_heroes/strange.jpg",
+    description: "Верховный маг Земли, защищающий реальность от мистических угроз. Манипулирует магией для нанесения урона, создания защитных сооружений и мгновенного перемещения по полю боя через порталы.",
+    abilities: [
+        {
+            name: "ЗАКЛИНАНИЯ АГАМОТТО",
+            description: "Выпускает снаряды мистической энергии, которые преследуют nearby врагов."
+        },
+        {
+            name: "КОЛЬЦО АНАТХОНА",
+            description: "Создаёт круг магии на земле, который замедляет врагов внутри и периодически наносит им урон."
+        },
+        {
+            name: "ПОРТАЛ",
+            description: "Открывает два связанных портала на поверхностях, через которые могут пройти союзники и снаряды."
+        },
+        {
+            name: "ЦИКЛЫ АГАМОТТО",
+            description: "Использует Время, чтобы создать временную петлю в области. Враги внутри петли получают урон, а их способности замедленно перезаряжаются."
+        },
+    ],
+    PassAbilities: [
+        {
+            name: "ПЛАЩ ЛЕВИТАЦИИ",
+            description: "Может парить над землёй и выполнять двойные прыжки."
+        },
+        {
+            name: "ГЛАЗ АГАМОТТО",
+            description: "Видит врагов через стены и обнаруживает скрытые объекты на карте."
+        },
+    ],
+    Team: [
+        {
+            name: "МИСТИЧЕСКИЕ ИСКУССТВА",
+            description: "Вместе с другими магами, такими как Алая Ведьма и Вонг, создаёт мощные магические комбинации."
+        },
+        {
+            name: "ЗАЩИТНИКИ РЕАЛЬНОСТИ",
+            description: "Усиливает способности других героев, защищающих мультивселенную."
+        },
+    ],
+},
+
+        invisible: {
+            name: "Женщина-невидимка",
+            real_name: "Сьюзан Шторм-Ричардс",
+            Difficult: "★ ★ ★ ☆ ☆",
+            role: "Дальний бой · Невидимость",
+            image: "img_heroes/Invisible_Woman_Hero_Portrait.webp",
+            description: "Член Фантастической четвёрки, способная становиться невидимой и создавать силовые поля. Мастер контроля и поддержки, которая может защитить команду и незаметно атаковать врагов.",
+    abilities: [
+        {
+            name: "СИЛОВОЙ ВЫСТРЕЛ",
+            description: "Выпускает сфокусированные импульсы силового поля, наносящие урон."
+        },
+        {
+            name: "ПОЛЕ НЕВИДИМОСТИ",
+            description: "Делает себя и nearby союзников невидимыми на короткое время. Атака срывает эффект."
+        },
+        {
+            name: "СИЛОВОЙ КУПОЛ",
+            description: "Создаёт большой защитный купол, который блокирует вражеские снаряды и атаки."
+        },
+        {
+            name: "СФЕРА ИЗОЛЯЦИИ",
+            description: "Заключает вражеского героя в непроницаемую сферу силового поля, изолируя его от команды на короткое время."
+        },
+    ],
+    PassAbilities: [
+        {
+            name: "НЕВИДИМОСТЬ",
+            description: "Может становиться невидимой при неподвижности на несколько секунд."
+        },
+        {
+            name: "СИЛОВОЕ ПОЛЕ",
+            description: "Пассивное снижение урона для nearby союзников."
+        },
+    ],
+    Team: [
+        {
+            name: "ФАНТАСТИЧЕСКАЯ ЧЕТВЁРКА",
+            description: "Вместе с другими членами Фантастической четвёрки создаёт уникальные защитные и атакующие комбинации."
+        },
+        {
+            name: "НЕВИДИМЫЕ УГРОЗЫ",
+            description: "Усиливает способности других героев с невидимостью и скрытностью."
+        },
+    ],
+},
+        punisher: {
+            name: "Каратель",
+            real_name: "Фрэнк Кастл",
+            Difficult: "★ ★ ☆ ☆ ☆",
+            role: "Комбинированный бой · Турель",
+            image: "img_heroes/punisher.jpg",
+            description: "Бывший морской котик, ведущий беспощадную войну с преступностью. Использует огромный арсенал огнестрельного оружия, взрывчатки и тактических приёмов для уничтожения врагов.",
+            abilities: [
+                {
+                    name: "ШТУРМОВАЯ ВИНТОВКА / ДРОБОВИК",
+                    description: "Может переключаться между автоматической винтовкой для дальнего боя и мощным дробовиком для ближнего."
+                },
+                {
+                    name: "ПРОТИВОПЕХОТНАЯ МИНА",
+                    description: "Устанавливает мину, которая взрывается при приближении врага, нанося урон по области."
+                },
+                {
+                    name: "СТАЦИОНАРНЫЙ ПУЛЕМЁТ",
+                    description: "Разворачивает тяжёлый пулемёт на треноге, из которого может вести огонь, будучи неподвижным, но с огромной скорострельностью и уроном."
+                },
+                {
+                    name: "ВОЗМЕЗДИЕ",
+                    description: "Достаёт ПЗРК и запускает самонаводящуюся ракету по выбранному врагу, нанося огромный урон при прямом попадании."
+                },
+            ],
+            PassAbilities: [
+                {
+                    name: "ВОЕННАЯ ПОДГОТОВКА",
+                    description: "Увеличение точности и перезарядки оружия при стрельбе из укрытия."
+                },
+                {
+                    name: "МЕСТЬ",
+                    description: "Увеличение урона по врагам, которые недавно атаковали союзников Карателя."
+                },
+            ],
+            Team: [
+                {
+                    name: "БЕСКОНЕЧНЫЙ ПАТРОН",
+                    description: "Ракета бросает устройство Перезарядки патронов в направлении цели. При входе в радиус действия устройства Каратель и Зимний солдат получают баффы Бесконечный Патрон и Быстрая Стрельба."
+                },
+                {
+                    name: "СОЛДАТЫ УДАЧИ",
+                    description: "Вместе с другими солдатами и наёмниками создаёт тактические комбинации."
+                },
+            ],
+        },
+
+        hulk: {
+            name: "Халк",
+                real_name: "Доктор Роберт Брюс Бeннер",
+                Difficult: "★ ★ ☆ ☆ ☆",
+                role: "Ближний бой · Щиты",
+                image: "img_heroes/Hulk_Hero_Portrait.webp",
+    description: "Невероятно сильный и живучий монстр. Чем больше получает урона, тем сильнее злится. Использует своё тело как оружие и щит, способен сокрушать врагов и поглощать огромное количество урона.",
+                abilities: [
+                    {
+                        name: "СМЯТИЕ",
+                        description: "Мощные размашистые удары руками, наносящие урон всем врагам вблизи."
+                    },
+                    {
+                        name: "ЗЕМЛЕТРЯСЕНИЕ",
+                        description: "Прыгает в выбранную точку, создавая ударную волну при приземлении, которая наносит урон и подбрасывает nearby врагов."
+                    },
+                    {
+                        name: "СОКРУШИТЕЛЬНЫЙ ХЛОПОК",
+                        description: "Хлопает ладонями перед собой, создавая ударную волну, которая наносит урон и отбрасывает врагов."
+                    },
+                    {
+                        name: "Я САМЫЙ СИЛЬНЫЙ!",
+                        description: "Впадает в ярость, временно получая щит, который поглощает урон, и значительно увеличивая свой урон в ближнем бою."
+                    },
+                ],
+                PassAbilities: [
+                    {
+                        name: "УСИЛЕНИЕ БРОНИ",
+                        description: "Активирует Усиление брони, увеличивая урон Репульсирующего Взрыва и Унибит."
+                    },
+                    {
+                        name: "МИКРО-РАКЕТНЫЙ ОБСТРЕЛ",
+                        description: "При использовании Гиперскорость или Усиление брони."
+                    },
+                    {
+                        name: "ГИПЕРСКОРОСТЬ",
+                        description: "Активируйте состояние гиперскорости для быстрого полета вперед"
+                    },
+                ],
+                Team: [
+                    {
+                        name: "ГАММА-ОВЕРДРАЙВ",
+                        description: "Халк заряжает Доктора Стрэнджа и Железного человека гамма-излучением. Когда Доктор Стрэндж использует Водоворот Безумия, он высвобождает избыточную гамма-энергию. Когда Железный человек использует Усиление Брони, он инициирует гамма-апгрейд."
+                    },
+                ]
+            },
+
+        captainamerica: {
+           name: "Капитан Америка",
+            real_name: "Стив Роджерс",
+            Difficult: "★ ★ ☆ ☆ ☆",
+            role: "Защита · Лидер",
+            image: "img_heroes/Captain_America_Hero_Portrait.webp",
+            description: "Символ надежды и тактический лидер Мстителей. Мастер ближнего боя со своим несокрушимым щитом, который может блокировать атаки и использоваться как метательное оружие.",
+                abilities: [
+        {
+            name: "УДАРЫ ЩИТОМ",
+            description: "Наносит серию быстрых ударов щитом в ближнем бою."
+        },
+        {
+            name: "РИКОШЕТ",
+            description: "Бросает щит, который летит по траектории, поражая нескольких врагов и возвращаясь к нему."
+        },
+        {
+            name: "ЩИТ НА ПЕРЕДОВОЙ",
+            description: "Поднимает щит, блокируя атаки, приходящие спереди, и значительно снижая получаемый урон."
+        },
+        {
+            name: "МСТИТЕЛИ, ОБЩИЙ СБОР!",
+            description: "Подаёт сигнал, дающий nearby союзникам временный щит и увеличивающий их урон на короткое время."
+        },
+    ],
+    PassAbilities: [
+        {
+            name: "СЫВОРОТКА СУПЕРСОЛДАТА",
+            description: "Пассивное увеличение здоровья и скорости восстановления."
+        },
+        {
+            name: "НЕСОКРУШИМЫЙ ЩИТ",
+            description: "Щит имеет шанс отразить снаряды обратно в атакующего."
+        },
+    ],
+    Team: [
+        {
+            name: "МСТИТЕЛИ",
+            description: "Вместе с другими Мстителями получает усиление характеристик и создаёт командные атаки."
+        },
+        {
+            name: "ПАТРИОТИЧЕСКИЙ ДУЭТ",
+            description: "С Баки Барнсом (Зимний Солдат) образует смертоносные комбо-атаки."
+        },
+    ],
+},
+
+        blackwidow: {
+            name: "Чёрная Вдова",
+            real_name: "Наташа Романофф",
+            Difficult: "★ ★ ★ ☆ ☆",
+            role: "Комбинированный бой · Винтовка",
+            image: "img_heroes/Black_Widow_Hero_Portrait.webp",
+            description: "Высококвалифицированный шпион, мастер боевых искусств и тактический стрелок. Эффективна как на дальних, так и на ближних дистанциях, используя скрытность и высокие технологии.",
+    abilities: [
+        {
+            name: "ВИНТОВКА / КОЛЬТЫ",
+            description: "Может прицелиться для точных выстрелов из снайперской винтовки или вести автоматический огонь из парных пистолетов."
+        },
+        {
+            name: "ТЕНЕВОЙ ШАГ",
+            description: "Быстро перекатывается в направлении движения, уходя от атаки и временно увеличивая скорость передвижения."
+        },
+        {
+            name: "ЭЛЕКТРОШОКЕРЫ",
+            description: "Бросает два устройства, которые прилипают к nearby поверхностям или врагам и создают электрическую дугу между собой, нанося урон и оглушая врагов, оказавшихся между ними."
+        },
+        {
+            name: "ПОЛНАЯ РАЗБЛОКИРОВКА",
+            description: "Входит в режим максимальной концентрации. На время действия способности её прицеливание не дрожит, урон от винтовки увеличен, а перезарядка происходит мгновенно."
+        },
+    ],
+    PassAbilities: [
+        {
+            name: "ШПИОНСКАЯ ПОДГОТОВКА",
+            description: "Тихое передвижение и снижение времени обнаружения врагами."
+        },
+        {
+            name: "УБИЙСТВЕННАЯ ГРАЦИЯ",
+            description: "Критические попадания в голову наносят дополнительный урон и ненадолго оглушают цель."
+        },
+    ],
+    Team: [
+        {
+            name: "МСТИТЕЛИ: СПЕЦОПЕРАЦИЯ",
+            description: "Вместе с другими шпионами и агентами создаёт тактические комбинации."
+        },
+        {
+            name: "КРАСНАЯ КОМНАТА",
+            description: "С другими выпускниками программы «Красная комната» образует смертоносные дуэты."
+        },
+    ],
+},
+        };
+
+    // Открытие модального окна при клике на карточку
+    document.querySelectorAll('.hero-card').forEach(card => {
+        card.addEventListener('click', function(e) {
+            if (e.target.classList.contains('favorite-btn')) {
+                return;
+            }
+
+            const heroId = this.getAttribute('data-hero');
+            const hero = heroesData[heroId];
+            
+            if (hero) {
+                document.getElementById('modalHeroName').textContent = hero.name;
+                document.getElementById('modalHeroRole').textContent = hero.role;
+                document.getElementById('modalHeroImage').src = hero.image;
+                document.getElementById('modalHeroDesc').textContent = hero.description;
+                document.getElementById('modalHeroRealName').textContent = hero.real_name;
+                document.getElementById('modalHeroDifficult').textContent = hero.Difficult || 'Не указана';
+                
+                // Заполняем способности
+                const abilitiesContainer = document.getElementById('heroAbilities');
+                abilitiesContainer.innerHTML = '';
+                hero.abilities.forEach(ability => {
+                    const abilityItem = document.createElement('div');
+                    abilityItem.className = 'ability-item';
+                    abilityItem.innerHTML = `
+                        <div class="ability-name">${ability.name}</div>
+                        <div class="ability-desc">${ability.description}</div>
+                    `;
+                    abilitiesContainer.appendChild(abilityItem);
+                });
+                
+                // Заполняем пассивные способности
+                const PassAbilitiesContainer = document.getElementById('heroPassAbilities');
+                PassAbilitiesContainer.innerHTML = '';
+                hero.PassAbilities.forEach(PassAbility => {
+                    const PassAbilityItem = document.createElement('div');
+                    PassAbilityItem.className = 'PassAbility-item';
+                    PassAbilityItem.innerHTML = `
+                        <div class="PassAbility-name">${PassAbility.name}</div>
+                        <div class="PassAbility-desc">${PassAbility.description}</div>
+                    `;
+                    PassAbilitiesContainer.appendChild(PassAbilityItem);
+                });
+                
+                // Заполняем командные способности
+                const TeamContainer = document.getElementById('heroTeam');
+                TeamContainer.innerHTML = '';
+                hero.Team.forEach(Team => {
+                    const TeamItem = document.createElement('div');
+                    TeamItem.className = 'Team-item';
+                    TeamItem.innerHTML = `
+                        <div class="Team-name">${Team.name}</div>
+                        <div class="Team-desc">${Team.description}</div>
+                    `;
+                    TeamContainer.appendChild(TeamItem);
+                });
+
+                document.getElementById('heroModal').style.display = 'block';
+                document.body.style.overflow = 'hidden';
+            }
+        });
+    });
+
+    // Закрытие модального окна
+    document.querySelector('.modal-close').addEventListener('click', function() {
+        document.getElementById('heroModal').style.display = 'none';
+        document.body.style.overflow = '';
+    });
+
+    // Закрытие при клике вне окна
+    window.addEventListener('click', function(event) {
+        if (event.target === document.getElementById('heroModal')) {
+            document.getElementById('heroModal').style.display = 'none';
+            document.body.style.overflow = '';
+        }
+    });
+}
+
+// Функция для очистки избранного при выходе (вызывается из authService)
+function clearFavoritesOnLogout() {
+    if (window.favoritesManager) {
+        window.favoritesManager.clearFavorites();
+    }
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('user_favorites');
+}
+
+// Проверьте наличие кнопки фильтра
+console.log('Кнопка избранного:', document.querySelector('[data-filter="favorites"]'));
+
+// Проверьте загрузку избранных
+if (window.favoritesManager) {
+    console.log('Избранные из менеджера:', [...window.favoritesManager.favorites]);
+    
+    // Принудительно загрузите избранные
+    window.favoritesManager.loadFavoritesFromDB().then(() => {
+        console.log('Загруженные избранные:', [...window.favoritesManager.favorites]);
+    });
+}
+
+// Проверьте авторизацию
+console.log('Авторизован:', window.authService ? window.authService.isAuthenticated() : 'нет');
+console.log('Токен:', window.authService ? window.authService.token : 'нет');
+
+// Функция для загрузки героев с сервера
+async function loadHeroesFromServer() {
+    try {
+        console.log('Загружаем героев с сервера...');
+        const response = await fetch(`${API_BASE_URL}/heroes?limit=50`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (result.success && result.data && result.data.heroes) {
+            console.log(`Загружено ${result.data.heroes.length} героев с сервера`);
+            
+            // Здесь можно обновить интерфейс данными с сервера
+            // Например, создать карточки динамически
+            updateHeroesGrid(result.data.heroes);
+        }
+        
+    } catch (error) {
+        console.error('Ошибка загрузки героев с сервера:', error);
+        // Продолжаем использовать статические данные
+    }
+}
+
+// Функция для обновления сетки героев
+function updateHeroesGrid(heroes) {
+    const grid = document.querySelector('.heroes-grid');
+    if (!grid || !heroes) return;
+    
+    // Очищаем сетку (опционально)
+    // grid.innerHTML = '';
+    
+    // Добавляем или обновляем карточки
+    heroes.forEach(hero => {
+        const existingCard = document.querySelector(`.hero-card[data-hero="${hero.name.toLowerCase().replace(/\s+/g, '')}"]`);
+        
+        if (!existingCard) {
+            // Создаем новую карточку
+            createHeroCard(hero);
+        }
+    });
+}
+
+// Функция создания карточки героя
+function createHeroCard(hero) {
+    const card = document.createElement('div');
+    card.className = 'hero-card visible';
+    card.setAttribute('data-hero', hero.name.toLowerCase().replace(/\s+/g, ''));
+    card.setAttribute('data-category', getRoleCategory(hero.role));
+    
+    // Определяем категорию по роли
+    function getRoleCategory(role) {
+        const roleMap = {
+            'танк': 'tank',
+            'дамагер': 'attack', 
+            'стратег': 'support'
+        };
+        return roleMap[role] || 'attack';
+    }
+    
+    // Формируем HTML карточки
+    card.innerHTML = `
+        <div class="hero-info">
+            <h3 class="hero-name">${hero.name}</h3>
+            <p class="hero-difficult">${getDifficultyStars(hero.difficulty)}</p>
+            <p class="hero-role">${hero.role} · ${getRoleDescription(hero.role)}</p>
+        </div>
+    `;
+    
+    // Устанавливаем фоновое изображение
+    if (hero.image_url) {
+        card.style.backgroundImage = `url('${hero.image_url}')`;
+    }
+    
+    // Добавляем в сетку
+    const grid = document.querySelector('.heroes-grid');
+    if (grid) {
+        grid.appendChild(card);
+    }
+}
+
+// Вспомогательные функции
+function getDifficultyStars(difficulty) {
+    const starMap = {
+        'легкая': '★ ☆ ☆ ☆ ☆',
+        'средняя': '★ ★ ☆ ☆ ☆', 
+        'сложная': '★ ★ ★ ☆ ☆'
+    };
+    return starMap[difficulty] || '★ ☆ ☆ ☆ ☆';
+}
+
+function getRoleDescription(role) {
+    const descMap = {
+        'танк': 'Защита',
+        'дамагер': 'Атака',
+        'стратег': 'Поддержка'
+    };
+    return descMap[role] || 'Атака';
+}
+
+// Вызываем загрузку при старте
+document.addEventListener('DOMContentLoaded', function() {
+    // Даем время на инициализацию
+    setTimeout(() => {
+        if (window.favoritesManager) {
+            window.favoritesManager.loadFavoritesFromDB();
+        }
+        // loadHeroesFromServer(); // Раскомментировать когда будет готов бэкенд
+    }, 1000);
+});
+
+
+я могу войти, пользователь добавляется в бд. но сразу после выходит из аккаунта. плюс со страницы герои исчезла кнопка лайка. и возможность входа. вот ошибки: 
+config.js:135 ❌ Ошибка проверки токена: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+
+на странице герои: 
+Uncaught SyntaxError: Identifier 'API_BASE_URL' has already been declared (at script_heroes.js:1:1)
+
+на странице сообщество:
+script_community.js:21 Uncaught (in promise) TypeError: this.setupEventListeners is not a function
+    at CommunityManager.init (script_community.js:21:14)
+    at new CommunityManager (script_community.js:15:14)
+    at HTMLDocument.<anonymous> (script_community.js:706:35)
+
+так же модальное окно не закрывается.

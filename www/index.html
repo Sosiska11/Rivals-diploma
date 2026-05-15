@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style_main.css">
+    <link rel="stylesheet" href="style_modal.css">
+    <title>Marvel Rivals | Официальный фан-сайт</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Anonymous+Pro:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+        /* Стили для кнопки входа */
+        .auth-buttons {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-left: auto;
+            margin-right: 2rem;
+        }
+
+        .login-btn-header {
+            background-color: transparent;
+            color: white;
+            border: 2px solid #4a90e2;
+            padding: 0.5rem 1.2rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Bebas Neue', Arial, sans-serif;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .login-btn-header:hover {
+            background-color: #4a90e2;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .auth-buttons {
+                margin-right: 1rem;
+            }
+            
+            .login-btn-header {
+                padding: 0.4rem 1rem;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header id="mainHeader">
+        <a href="https://www.neteasegames.com/m/"><img src="NetEase-logo.png" alt=""></a>
+        <nav>
+            <ul>
+                <li><a href="index.html">Главная</a></li>
+                <li><a href="heroes.html">Герои</a></li>
+                <li><a href="community.html">Сообщество</a></li>
+            </ul>
+        </nav>
+        <div class="auth-buttons">
+            <button class="login-btn-header" id="openLoginBtn">Войти</button>
+        </div>
+
+        <div class="burger-menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </header>
+    
+        <section class="hero">
+        <!-- Видеофон -->
+        <video autoplay muted loop playsinline class="hero-video">
+            <source src="img_main/video_bg.mp4" type="video/mp4">
+            Ваш браузер не поддерживает видео.
+        </video>
+        
+        <div class="hero-content">
+            <img src="logo.svg" alt="">
+            <p>Столкните легендарных героев и злодеев Marvel в эпических командных сражениях</p>
+            <button class="btn" id="watchTrailer">Смотреть трейлер</button>
+        </div>
+    </section>
+
+    <section class="features">
+        <div class="feature-card">
+            <h3>Эпические битвы</h3>
+            <p>Сражайтесь на разрушаемых локациях по вселенной Marvel, от Нью-Йорка до Ваканды</p>
+        </div>
+        <div class="feature-card">
+            <h3>Любимые персонажи</h3>
+            <p>Выберите своего героя или злодея с уникальными способностями и комбо-атаками</p>
+        </div>
+        <div class="feature-card">
+            <h3>Командный геймплей</h3>
+            <p>Объединяйте силы с друзьями и создавайте мощные комбинации способностей</p>
+        </div>
+    </section>  
+    
+    <!-- Character Showcase Section -->
+    <section class="character-showcase">
+        <div class="character-card" style="background-image: url('img_heroes/ironman.jpg');">
+            <div class="character-info">
+                <h3>Железный Человек</h3>
+                <p>Дальний бой · Технологии</p>
+            </div>
+        </div>
+        <div class="character-card" style="background-image: url('img_heroes/spiderman.jpg');">
+            <div class="character-info">
+                <h3>Человек-Паук</h3>
+                <p>Ближний бой · Мобильность</p>
+            </div>
+        </div>
+        <div class="character-card" style="background-image: url('img_heroes/strange.jpg');">
+            <div class="character-info">
+                <h3>Доктор Стрендж</h3>
+                <p>Дальний бой · Порталы</p>
+            </div>
+        </div>
+        <div class="character-card" style="background-image: url('img_heroes/invisblewoman.jpg');">
+            <div class="character-info">
+                <h3>Женщина неведимка</h3>
+                <p>Дальний бой · Невидимость</p>
+            </div>
+        </div>
+        <div class="character-card" style="background-image: url('img_heroes/punisher.jpg');">
+            <div class="character-info">
+                <h3>Каратель</h3>
+                <p>Комбинированный бой · Турель</p>
+            </div>
+        </div>
+    </section>
+
+        <!-- New Countdown Section -->
+        <section class="countdown">
+            <h2>До выхода нового сезона осталось:</h2>
+            <div class="countdown-timer" id="countdown">
+                <div class="timer-block">
+                    <div class="timer-value" id="days">00</div>
+                    <div><h1>Дней</h1></div>
+                </div>
+                <div class="timer-block">
+                    <div class="timer-value" id="hours">00</div>
+                    <div><h1>Часов</h1></div>
+                </div>
+                <div class="timer-block">
+                    <div class="timer-value" id="minutes">00</div>
+                    <div><h1>Минут</h1></div>
+                </div>
+                <div class="timer-block">
+                    <div class="timer-value" id="seconds">00</div>
+                    <div><h1>Секунд</h1></div>
+                </div>
+            </div>
+            <div style="display: flex; justify-content: center;">
+                <button class="btn" style="margin-top: 1.5rem;" id="openModalBtn">Зарегистрироваться на рассылку</button>
+            </div>
+            </section>
+    
+    
+    <!-- Testimonials Section -->
+    <section class="testimonials">
+        <h2>Что говорят игроки</h2>
+        <div class="testimonial-slider">
+            <div class="testimonial active">
+                <p>"Marvel Rivals сочетает лучшие элементы командных шутеров с любимыми персонажами Marvel. Это именно то, чего мы ждали!"</p>
+                <p><strong>- Игровой журнал "Level Up"</strong></p>
+            </div>
+            <div class="testimonial">
+                <p>"Синергия между персонажами потрясающая. Когда Тор и Локи объединяют силы - это нечто!"</p>
+                <p><strong>- MarvelFan2024</strong></p>
+            </div>
+            <div class="testimonial">
+                <p>"Графика и анимация на высшем уровне. Чувствуется, что разработчики действительно любят вселенную Marvel."</p>
+                <p><strong>- ComicBookGamer</strong></p>
+            </div>
+            <div class="slider-nav">
+                <span class="slider-dot active" data-index="0"></span>
+                <span class="slider-dot" data-index="1"></span>
+                <span class="slider-dot" data-index="2"></span>
+            </div>
+        </div>
+    </section>
+    
+    <!-- News Preview Section -->
+    <section class="news-preview">
+        <h2 style="text-align: center;">Последние новости</h2>
+        <div class="news-grid">
+            <div class="news-item">
+                <div class="news-image" style="background-image: url('img_main/doom.jpg');"></div>
+                <div class="news-content">
+                    <div class="news-date">10 марта 2025</div>
+                    <h3>Новый персонаж: Доктор Дум</h3>
+                    <p>Легендарный злодей присоединяется к битве с уникальными технологическими способностями.</p>
+                </div>
+            </div>
+            <div class="news-item">
+                <div class="news-image" style="background-image: url('img_main/asgard.jpg');"></div>
+                <div class="news-content">
+                    <div class="news-date">8 февраля 2025</div>
+                    <h3>Карта "Асгард"</h3>
+                    <p>Новая локация с динамически изменяющейся окружающей средой.</p>
+                </div>
+            </div>
+            <div class="news-item">
+                <div class="news-image" style="background-image: url('img_main/season.jpg');"></div>
+                <div class="news-content">
+                    <div class="news-date">1 марта 2025</div>
+                    <h3>Новый сезон в апреле</h3>
+                    <p>Зарегистрируйтесь сейчас чтобы быть в курсе событий.</p>
+                </div>
+            </div>
+        </div>
+        <div style="text-align: center; margin-top: 2rem;">
+            <a href="news.html" class="btn">Все новости</a>
+        </div>
+    </section>
+    
+    <footer>
+        <p>© 2025 Курсовая по вселенной Marvel Rivals. Неофициальный ресурс.</p>
+        <p>Все права на Marvel Rivals принадлежат Marvel и NetEase.</p>
+        <div style="margin-top: 1rem;">
+            <a href="#"><img src="icons8-твиттерх-50.png" alt="Social" style="height: 40px; margin: 0 10px;"></a>
+            <a href="#"><img src="icons8-vk-50.png" alt="Social" style="height: 40px; margin: 0 10px;"></a>
+            <a href="#"><img src="icons8-телеграм-50.png" alt="Social" style="height: 40px; margin: 0 10px;"></a>
+        </div>
+    </footer>
+
+
+ <!-- ВСЕ ЧТО ВЫШЕ footer ОСТАЕТСЯ БЕЗ ИЗМЕНЕНИЙ -->
+
+    <!-- Модальное окно регистрации -->
+    <div class="modal-overlay" id="registerModal" style="display: none;">
+        <div class="register-modal">
+            <button class="close-btn" id="closeRegisterBtn">&times;</button>
+            
+            <div class="modal-header">
+                <h2>Присоединиться к битве</h2>
+                <p>Создайте аккаунт Marvel Rivals</p>
+            </div>
+
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="username">Игровой id</label>
+                    <input type="text" id="username" placeholder="Введите ваше имя" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Электронная почта</label>
+                    <input type="email" id="email" placeholder="your@email.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Пароль</label>
+                    <input type="password" id="password" placeholder="Создайте надежный пароль" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmPassword">Подтвердите пароль</label>
+                    <input type="password" id="confirmPassword" placeholder="Повторите пароль" required>
+                </div>
+
+                <button type="submit" class="register-btn">Зарегистрироваться</button>
+            </form>
+
+            <div class="divider">
+                <span>или</span>
+            </div>
+
+            <div class="social-login">
+                <button class="social-btn"><img src="icons8-vk-50.png" alt=""></button>
+                <button class="social-btn"><img src="icons8-твиттерх-50.png" alt=""></button>
+                <button class="social-btn"><img src="icons8-телеграм-50.png" alt=""></button>
+            </div>
+
+            <div class="login-link">
+                Уже есть аккаунт? <a href="#" id="switchToLoginLink">Войти</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно входа -->
+    <div class="modal-overlay" id="loginModal" style="display: none;">
+        <div class="login-modal">
+            <button class="close-btn" id="closeLoginBtn">&times;</button>
+            
+            <div class="modal-header">
+                <h2>Возвращение героя</h2>
+                <p>Войдите в ваш аккаунт Marvel Rivals</p>
+            </div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">Электронная почта</label>
+                    <input type="email" id="loginEmail" placeholder="your@email.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="loginPassword">Пароль</label>
+                    <input type="password" id="loginPassword" placeholder="Введите ваш пароль" required>
+                </div>
+
+                <div class="form-options">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="rememberMe">
+                        <span class="checkmark"></span>
+                        Запомнить меня
+                    </label>
+                    <a href="#" class="forgot-password">Забыли пароль?</a>
+                </div>
+
+                <button type="submit" class="login-btn">Войти в игру</button>
+            </form>
+
+            <div class="divider">
+                <span>или войдите через</span>
+            </div>
+
+            <div class="social-login">
+                <button class="social-btn">G</button>
+                <button class="social-btn">F</button>
+                <button class="social-btn">S</button>
+            </div>
+
+            <div class="register-link">
+                Нет аккаунта? <a href="#" id="switchToRegisterLink">Присоединиться к битве</a>
+            </div>
+        </div>
+    </div>
+    
+    <script src="config.js"></script>
+    <script src="script_main.js"></script>
+    
+    <script>
+    // Обработчики модальных окон для главной страницы
+    document.addEventListener('DOMContentLoaded', function() {
+        // Кнопки открытия
+        const openLoginBtn = document.getElementById('openLoginBtn');
+        const openRegisterBtn = document.getElementById('openModalBtn'); // Это кнопка "Зарегистрироваться на рассылку"
+        
+        // Кнопки закрытия
+        const closeLoginBtn = document.getElementById('closeLoginBtn');
+        const closeRegisterBtn = document.getElementById('closeRegisterBtn');
+        
+        // Ссылки переключения
+        const switchToLoginLink = document.getElementById('switchToLoginLink');
+        const switchToRegisterLink = document.getElementById('switchToRegisterLink');
+        
+        // Модальные окна
+        const loginModal = document.getElementById('loginModal');
+        const registerModal = document.getElementById('registerModal');
+        
+        // Функции
+        function openLoginModal() {
+            if (loginModal) {
+                loginModal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            }
+        }
+        
+        function openRegisterModal() {
+            if (registerModal) {
+                registerModal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            }
+        }
+        
+        function closeLoginModal() {
+            if (loginModal) {
+                loginModal.style.display = 'none';
+                document.body.style.overflow = '';
+            }
+        }
+        
+        function closeRegisterModal() {
+            if (registerModal) {
+                registerModal.style.display = 'none';
+                document.body.style.overflow = '';
+            }
+        }
+        
+        // Назначаем обработчики
+        if (openLoginBtn) {
+            openLoginBtn.onclick = openLoginModal;
+        }
+        
+        if (openRegisterBtn) {
+            openRegisterBtn.onclick = openRegisterModal;
+        }
+        
+        if (closeLoginBtn) {
+            closeLoginBtn.onclick = closeLoginModal;
+        }
+        
+        if (closeRegisterBtn) {
+            closeRegisterBtn.onclick = closeRegisterModal;
+        }
+        
+        // Переключение между окнами
+        if (switchToLoginLink) {
+            switchToLoginLink.onclick = function(e) {
+                e.preventDefault();
+                closeRegisterModal();
+                setTimeout(openLoginModal, 100);
+            };
+        }
+        
+        if (switchToRegisterLink) {
+            switchToRegisterLink.onclick = function(e) {
+                e.preventDefault();
+                closeLoginModal();
+                setTimeout(openRegisterModal, 100);
+            };
+        }
+        
+        // Закрытие по клику вне окна
+        [loginModal, registerModal].forEach(modal => {
+            if (modal) {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        if (modal.id === 'loginModal') closeLoginModal();
+                        if (modal.id === 'registerModal') closeRegisterModal();
+                    }
+                });
+            }
+        });
+        
+        // Закрытие по ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeLoginModal();
+                closeRegisterModal();
+            }
+        });
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style_modal.css">
+    <link rel="stylesheet" href="style_heroes.css">
+    <title>Marvel Rivals | Герои</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Anonymous+Pro:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+                /* Стили для кнопки входа */
+        .auth-buttons {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-left: auto;
+            margin-right: 2rem;
+        }
+
+        .login-btn-header {
+            background-color: transparent;
+            color: white;
+            border: 2px solid #4a90e2;
+            padding: 0.5rem 1.2rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Bebas Neue', Arial, sans-serif;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .login-btn-header:hover {
+            background-color: #4a90e2;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .auth-buttons {
+                margin-right: 1rem;
+            }
+            
+            .login-btn-header {
+                padding: 0.4rem 1rem;
+                font-size: 1rem;
+            }
+        }
+    </style>
+    </style>
+</head>
+<body>
+
+    <div id="heroModal" class="hero-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalHeroName">Имя героя</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <img id="modalHeroImage" src="" alt="" class="modal-hero-image">
+                <div class="modal-hero-details">
+                    <div class="modal-hero-info">
+                        <p id="modalHeroRealName" class="real-name"></p>
+                        <p id="modalHeroDifficult" class="modal-hero-difficult"></p>
+                        <p id="modalHeroRole" class="hero-role"></p>
+                        <p id="modalHeroDesc"></p>
+                    </div>
+                    <div class="modal-hero-abilities">
+                        <h4>Аткаующие способности:</h4>
+                        <div id="heroAbilities"></div>
+                    </div>
+                    <div class="modal-hero-passiv">
+                        <h4>Другие способности:</h4>
+                        <div id="heroPassAbilities"></div>
+                    </div>
+                    <div class="modal-hero-team">
+                        <h4>Командные способности:</h4>
+                        <div id="heroTeam"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <header id="mainHeader">
+        <div class="logo">
+            <a href="main.html"><img src="NetEase-logo.png" alt="Marvel Rivals"></a>
+        </div>
+        
+        <div class="burger-menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+
+        <nav>
+            <ul>
+                <li><a href="index.html">Главная</a></li>
+                <li><a href="heroes.html" class="active">Герои</a></li>
+                <li><a href="community.html">Сообщество</a></li>
+            </ul>
+        </nav>
+
+        <div class="auth-buttons">
+            <button class="login-btn-header" id="openLoginBtn">Войти</button>
+        </div>
+
+    </header>
+    
+    <main>
+        <section class="heroes-container">
+            <h1 class="page-title">Все Герои</h1>
+            
+            <div class="filters">
+                <button class="filter-btn active" data-filter="all">Все</button>
+                <button class="filter-btn" data-filter="attack">Дуэлянты</button>
+                <button class="filter-btn" data-filter="support">Стратеги</button>
+                <button class="filter-btn" data-filter="tank">Защитники</button>
+                <button class="filter-btn" data-filter="favorites">
+                    <span class="heart-icon">♥</span> Избранное
+                </button>
+            </div>
+            
+            <div class="heroes-grid">
+                <!-- Железный Человек -->
+                <div class="hero-card visible" data-hero="ironman" data-category="attack" style="background-image: url('img_heroes/ironman.jpg');">
+                    <div class="hero-info">
+                        <h3 class="hero-name">Железный Человек</h3>
+                        <p class="hero-difficult">★ ★ ☆ ☆ ☆</p>
+                        <p class="hero-role">Дальний бой · Технологии</p>
+                    </div>
+                </div>
+
+                <!-- Чёрная Пантера -->
+                <div class="hero-card visible" data-hero="black" data-category="attack" style="background-image: url('img_heroes/black.jpg');">
+                    <div class="hero-info">
+                        <h3 class="hero-name">Чёрная Пантера</h3>
+                        <p class="hero-difficult">★ ★ ★ ★ ☆</p>
+                        <p class="hero-role">Ближний бой · Рывок</p>
+                    </div>
+                </div>
+
+                 <!-- Мэджик -->
+                <div class="hero-card visible" data-hero="magik" data-category="attack" style="background-image: url('img_heroes/magik.jpg');">
+                    <div class="hero-info">
+                        <h3 class="hero-name">Мэджик</h3>
+                        <p class="hero-difficult">★ ★ ★ ☆ ☆</p>
+                        <p class="hero-role">Ближний бой · Порталы</p>
+                    </div>
+                </div>
+
+                <!-- Локи-->
+                <div class="hero-card visible" data-hero="loki" data-category="support" style="background-image: url('img_heroes/loki.png');">
+                    <div class="hero-info">
+                        <h3 class="hero-name">Локи</h3>
+                        <p class="hero-difficult">★ ★ ★ ★ ☆</p>
+                        <p class="hero-role">Дальний бой · Копии</p>
+                    </div>
+                </div>
+
+                 <!-- Енот Ракета -->
+                <div class="hero-card visible" data-hero="rocket" data-category="support" style="background-image: url('img_heroes/rocket.png');">
+                    <div class="hero-info">
+                        <h3 class="hero-name">Енот Ракета</h3>
+                        <p class="hero-difficult">★ ☆ ☆ ☆ ☆</p>
+                        <p class="hero-role">Дальний бой · Воскрешение</p>
+                    </div>
+                </div>
+
+                <!-- Тор -->
+                <div class="hero-card visible" data-hero="thor" data-category="tank" style="background-image: url('img_heroes/thor.jpg');">
+                    <div class="hero-info">
+                        <h3 class="hero-name">Тор</h3>
+                        <p class="hero-difficult">★ ★ ★ ☆ ☆</p>
+                        <p class="hero-role">Ближний бой · Сокрушение</p>
+                    </div>
+                </div>
+
+                 <!-- Железный Кулак -->
+                <div class="hero-card visible" data-hero="ironfist" data-category="attack" style="background-image: url('img_heroes/ironfist.jpg');">
+                    <div class="hero-info">
+                        <h3 class="hero-name">Железный Кулак</h3>
+                        <p class="hero-difficult">★ ★ ★ ★ ☆</p>
+                        <p class="hero-role">Ближний бой · Скорость</p>
+                    </div>
+                </div>
+
+                <!-- Веном -->
+                <div class="hero-card visible" data-hero="venom" data-category="tank" style="background-image: url('img_heroes/venom.jpg');">
+                    <div class="hero-info">
+                        <h3 class="hero-name">Веном</h3>
+                        <p class="hero-difficult">★ ☆ ☆ ☆ ☆</p>
+                        <p class="hero-role">Комбинированный бой · Живучесть</p>
+                    </div>
+                </div>
+
+                 <!-- Мантис -->
+                <div class="hero-card visible" data-hero="mantis" data-category="support" style="background-image: url('img_heroes/mantis.png');">
+                    <div class="hero-info">
+                        <h3 class="hero-name">Мантис</h3>
+                        <p class="hero-difficult">★ ☆ ☆ ☆ ☆</p>
+                        <p class="hero-role">Дальний бой · Контроль</p>
+                    </div>
+                </div>
+
+                <!-- Росомаха -->
+                <div class="hero-card visible" data-hero="wolverine" data-category="support" style="background-image: url('img_heroes/wolverine.jpg');">
+                    <div class="hero-info">
+                        <h3 class="hero-name">Росомаха</h3>
+                        <p class="hero-difficult">★ ★ ★ ☆ ☆</p>
+                        <p class="hero-role">Ближний бой · Вампиризм</p>
+                    </div>
+                </div>
+
+                <!-- Зимний Солдат -->
+                <div class="hero-card visible" data-hero="baki" data-category="attack" style="background-image: url('img_heroes/baki.png');">
+                    <div class="hero-info">
+                        <h3 class="hero-name">Зимний Солдат</h3>
+                        <p class="hero-difficult">★ ★ ★ ☆ ☆</p>
+                        <p class="hero-role">Комбинированный бой · Крюк</p>
+                    </div>
+                </div>
+
+                 <!-- Девушка-белка -->
+                <div class="hero-card visible" data-hero="girl" data-category="attack" style="background-image: url('img_heroes/girl.jpg');">
+                    <div class="hero-info">
+                        <h3 class="hero-name">Девушка-белка</h3>
+                        <p class="hero-difficult">★ ☆ ☆ ☆ ☆</p>
+                        <p class="hero-role">Дальний бой · Бомбы</p>
+                    </div>
+                </div>
+
+                <!-- Пени Паркер -->
+                <div class="hero-card visible" data-hero="peni" data-category="tank" style="background-image: url('img_heroes/peni.jpg');">
+                    <div class="hero-info">
+                        <h3 class="hero-name">Пенни Паркер</h3>
+                        <p class="hero-difficult">★ ★ ★ ★ ☆</p>
+                        <p class="hero-role">Дальний бой · Контроль</p>
+                    </div>
+                </div>
+
+                <!-- Грут -->
+                <div class="hero-card visible" data-hero="groot" data-category="tank" style="background-image: url('img_heroes/groot.png');">
+                    <div class="hero-info">
+                        <h3 class="hero-name">Грут</h3>
+                        <p class="hero-difficult">★ ★ ☆ ☆ ☆</p>
+                        <p class="hero-role">Дальний бой · Контроль</p>
+                    </div>
+                </div>
+
+                 <!-- Луна Сноу -->
+                <div class="hero-card visible" data-hero="luna" data-category="support" style="background-image: url('img_heroes/luna.jpg');">
+                    <div class="hero-info">
+                        <h3 class="hero-name">Луна Сноу</h3>
+                        <p class="hero-difficult">★ ★ ☆ ☆ ☆</p>
+                        <p class="hero-role">Дальний бой · Исцеление</p>
+                    </div>
+                </div>
+
+                 <!-- Хела -->
+                <div class="hero-card visible" data-hero="hela" data-category="attack" style="background-image: url('img_heroes/hela.png');">
+                    <div class="hero-info">
+                        <h3 class="hero-name">Хела</h3>
+                        <p class="hero-role">Дальний бой · Оглушение</p>
+                    </div>
+                </div>
+
+                 <!-- Соколиный Глаз -->
+                <div class="hero-card visible" data-hero='hawkeye' data-category="attack" style="background-image: url('img_heroes/hawkeye.png');">
+                    <div class="hero-info">
+                        <h3 class="hero-name">Соколиный Глаз</h3>
+                        <p class="hero-role">Дальний бой · Ослабление</p>
+                    </div>
+                </div>
+
+                 <!-- Джефф, сухопутная акула -->
+                <div class="hero-card visible" data-hero='jeff' data-category="support" style="background-image: url('img_heroes/jeff.jpg');">
+                    <div class="hero-info">
+                        <h3 class="hero-name">Джефф, сухопутная акула</h3>
+                        <p class="hero-role">Дальний бой · Контроль</p>
+                    </div>
+                </div>
+
+                <!-- Шторм -->
+                <div class="hero-card visible" data-hero='storm' data-category="attack" style="background-image: url('img_heroes/storm.jpg');">
+                    <div class="hero-info">
+                        <h3 class="hero-name">Шторм</h3>
+                        <p class="hero-role">Дальний бой · Усиление</p>
+                    </div>
+                </div>
+
+                <!-- Магнето -->
+                <div class="hero-card visible" data-hero='magneto' data-category="tank" style="background-image: url('img_heroes/magneto.jpg');">
+                    <div class="hero-info">
+                        <h3 class="hero-name">Магнето</h3>
+                        <p class="hero-role">Дальний бой · Щиты</p>
+                    </div>
+                </div>
+
+                <!-- Звёздный Лорд -->
+                <div class="hero-card visible" data-hero='starlord' data-category="attack" style="background-image: url('img_heroes/star.jpg');">
+                    <div class="hero-info">
+                        <h3 class="hero-name">Звёздный Лорд</h3>
+                        <p class="hero-role">Комбинированный бой · Скорость</p>
+                    </div>
+                </div>
+
+                <!-- Существо -->
+                <div class="hero-card visible" data-hero='thing' data-category="tank" style="background-image: url('img_heroes/thing.jpg');">
+                    <div class="hero-info">
+                        <h3 class="hero-name">Существо</h3>
+                        <p class="hero-role">Ближний бой · Живучесть</p>
+                    </div>
+                </div>                
+
+                 <!-- Алая Ведьма -->
+                <div class="hero-card visible" data-hero='scarlet' data-category="attack" style="background-image: url('img_heroes/scarlet.jpg');">
+                    <div class="hero-info">
+                        <h3 class="hero-name">Алая Ведьма</h3>
+                        <p class="hero-role">Дальний бой · Разрушение</p>
+                    </div>
+                </div>
+
+                <!-- Нэмор -->
+                <div class="hero-card visible" data-hero='namor' data-category="attack" style="background-image: url('img_heroes/namor.png');">
+                    <div class="hero-info">
+                        <h3 class="hero-name">Нэмор</h3>
+                        <p class="hero-role">Дальний бой · Турель</p>
+                    </div>
+                </div>
+
+                <!-- Псайлок -->
+                <div class="hero-card visible" data-hero='psylocke' data-category="attack" style="background-image: url('img_heroes/psylocke.jpg');">
+                    <div class="hero-info">
+                        <h3 class="hero-name">Псайлок</h3>
+                        <p class="hero-role">Комбинированный бой · Невидимость</p>
+                    </div>
+                </div>
+
+                <!-- Плащ и Кинжал -->
+                <div class="hero-card visible" data-hero='cloakdagger' data-category="support" style="background-image: url('img_heroes/dagger.jpg');">
+                    <div class="hero-info">
+                        <h3 class="hero-name">Плащ и Кинжал</h3>
+                        <p class="hero-role">Комбинированный бой · Уникальность</p>
+                    </div>
+                </div>
+
+                <!-- Человек-Факлел -->
+                <div class="hero-card visible" data-hero='torch' data-category="attack" style="background-image: url('img_heroes/torch.jpg');">
+                    <div class="hero-info">
+                        <h3 class="hero-name">Человек-Факлел</h3>
+                        <p class="hero-role">Дальний бой · Область</p>
+                    </div>
+                </div>
+
+                <!-- Мистер Фантастик -->
+                <div class="hero-card visible" data-hero='fantastic' data-category="attack" style="background-image: url('img_heroes/mister.jpg');">
+                    <div class="hero-info">
+                        <h3 class="hero-name">Мистер Фантастик</h3>
+                        <p class="hero-role">Комбинированный бой · Живучесть</p>
+                    </div>
+                </div>
+                
+
+                <!-- Лунный Рыцарь -->
+                <div class="hero-card visible" data-hero='moonknight' data-category="attack" style="background-image: url('img_heroes/moon.png');">
+                    <div class="hero-info">
+                        <h3 class="hero-name">Лунный Рыцарь</h3>
+                        <p class="hero-role">Дальний бой · Область</p>
+                    </div>
+                </div>
+
+                <!-- Адам Уорлок -->
+                <div class="hero-card visible" data-hero='adam' data-category="support" style="background-image: url('img_heroes/adam.png');">
+                    <div class="hero-info">
+                        <h3 class="hero-name">Адам Уорлок</h3>
+                        <p class="hero-role">Дальний бой · Возрождение</p>
+                    </div>
+                </div>
+                
+                <!-- Человек-Паук -->
+                <div class="hero-card visible" data-hero='spiderman' data-hero="spiderman" data-category="attack" style="background-image: url('img_heroes/spiderman.jpg');">
+                    <div class="hero-info">
+                        <h3 class="hero-name">Человек-Паук</h3>
+                        <p class="hero-difficult">★ ★ ★ ★ ★</p>
+                        <p class="hero-role">Ближний бой · Мобильность</p>
+                    </div>
+                </div>
+                
+                <!-- Доктор Стрэндж -->
+                <div class="hero-card visible" data-hero='strange' data-category="tank" style="background-image: url('img_heroes/strange.jpg');">
+                    <div class="hero-info">
+                        <h3 class="hero-name">Доктор Стрэндж</h3>
+                        <p class="hero-role">Дальний бой · Порталы</p>
+                    </div>
+                </div>
+                
+                <!-- Женщина-невидимка -->
+                <div class="hero-card visible" data-hero='invisible' data-category="support" style="background-image: url('img_heroes/invisblewoman.jpg');">
+                    <div class="hero-info">
+                        <h3 class="hero-name">Женщина-невидимка</h3>
+                        <p class="hero-role">Дальний бой · Невидимость</p>
+                    </div>
+                </div>
+                
+                <!-- Каратель -->
+                <div class="hero-card visible" data-hero="punisher" data-category="attack" style="background-image: url('img_heroes/punisher.jpg');">
+                    <div class="hero-info">
+                        <h3 class="hero-name">Каратель</h3>
+                        <p class="hero-role">Комбинированный бой · Турель</p>
+                    </div>
+                </div>
+                
+                <!-- Халк -->
+                <div class="hero-card visible" data-hero="hulk" data-hero="hulk" data-category="tank" style="background-image: url('img_heroes/hulk.jpg');">
+                    <div class="hero-info">
+                        <h3 class="hero-name">Халк</h3>
+                        <p class="hero-role">Ближний бой · Щиты</p>
+                    </div>
+                </div>
+                
+                <!-- Капитан Америка -->
+                <div class="hero-card visible" data-hero="captainamerica" data-category="tank" style="background-image: url('img_heroes/cap.jpg');">
+                    <div class="hero-info">
+                        <h3 class="hero-name">Капитан Америка</h3>
+                        <p class="hero-role">Защита · Лидер</p>
+                    </div>
+                </div>
+                
+                <!-- Черная Вдова -->
+                <div class="hero-card visible" data-hero="blackwidow" data-category="attack" style="background-image: url('img_heroes/nata.jpg');">
+                    <div class="hero-info">
+                        <h3 class="hero-name">Черная Вдова</h3>
+                        <p class="hero-role">Комбинированный бой · Винтовка</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    <footer>
+        <p>© 2025 Курсовая по вселенной Marvel Rivals. Неофициальный ресурс.</p>
+        <p>Все права на Marvel Rivals принадлежат Marvel и NetEase.</p>
+        <div style="margin-top: 1rem;">
+            <a href="#"><img src="icons8-твиттерх-50.png" alt="Social" style="height: 40px; margin: 0 10px;"></a>
+            <a href="#"><img src="icons8-vk-50.png" alt="Social" style="height: 40px; margin: 0 10px;"></a>
+            <a href="#"><img src="icons8-телеграм-50.png" alt="Social" style="height: 40px; margin: 0 10px;"></a>
+        </div>
+    </footer>
+
+    <!-- Модальное окно регистрации -->
+    <div class="modal-overlay" id="registerModal" style="display: none;">
+        <div class="register-modal">
+            <button class="close-btn" id="closeRegisterBtn">&times;</button>
+            
+            <div class="modal-header">
+                <h2>Присоединиться к битве</h2>
+                <p>Создайте аккаунт Marvel Rivals</p>
+            </div>
+
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="username">Игровой id</label>
+                    <input type="text" id="username" placeholder="Введите ваше имя" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Электронная почта</label>
+                    <input type="email" id="email" placeholder="your@email.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Пароль</label>
+                    <input type="password" id="password" placeholder="Создайте надежный пароль" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmPassword">Подтвердите пароль</label>
+                    <input type="password" id="confirmPassword" placeholder="Повторите пароль" required>
+                </div>
+
+                <button type="submit" class="register-btn">Зарегистрироваться</button>
+            </form>
+
+            <div class="divider">
+                <span>или</span>
+            </div>
+
+            <div class="social-login">
+                <button class="social-btn"><img src="icons8-vk-50.png" alt=""></button>
+                <button class="social-btn"><img src="icons8-твиттерх-50.png" alt=""></button>
+                <button class="social-btn"><img src="icons8-телеграм-50.png" alt=""></button>
+            </div>
+
+            <div class="login-link">
+                Уже есть аккаунт? <a href="#" id="switchToLoginLink">Войти</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно входа -->
+    <div class="modal-overlay" id="loginModal" style="display: none;">
+        <div class="login-modal">
+            <button class="close-btn" id="closeLoginBtn">&times;</button>
+            
+            <div class="modal-header">
+                <h2>Возвращение героя</h2>
+                <p>Войдите в ваш аккаунт Marvel Rivals</p>
+            </div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">Электронная почта</label>
+                    <input type="email" id="loginEmail" placeholder="your@email.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="loginPassword">Пароль</label>
+                    <input type="password" id="loginPassword" placeholder="Введите ваш пароль" required>
+                </div>
+
+                <div class="form-options">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="rememberMe">
+                        <span class="checkmark"></span>
+                        Запомнить меня
+                    </label>
+                    <a href="#" class="forgot-password">Забыли пароль?</a>
+                </div>
+
+                <button type="submit" class="login-btn">Войти в игру</button>
+            </form>
+
+            <div class="divider">
+                <span>или войдите через</span>
+            </div>
+
+            <div class="social-login">
+                <button class="social-btn">G</button>
+                <button class="social-btn">F</button>
+                <button class="social-btn">S</button>
+            </div>
+
+            <div class="register-link">
+                Нет аккаунта? <a href="#" id="switchToRegisterLink">Присоединиться к битве</a>
+            </div>
+        </div>
+    </div>
+    
+    <script src="config.js"></script>
+    <script src="script_heroes.js"></script>
+    
+    <script>
+    // Обработчики модальных окон для главной страницы
+    document.addEventListener('DOMContentLoaded', function() {
+        // Кнопки открытия
+        const openLoginBtn = document.getElementById('openLoginBtn');
+        const openRegisterBtn = document.getElementById('openModalBtn'); // Это кнопка "Зарегистрироваться на рассылку"
+        
+        // Кнопки закрытия
+        const closeLoginBtn = document.getElementById('closeLoginBtn');
+        const closeRegisterBtn = document.getElementById('closeRegisterBtn');
+        
+        // Ссылки переключения
+        const switchToLoginLink = document.getElementById('switchToLoginLink');
+        const switchToRegisterLink = document.getElementById('switchToRegisterLink');
+        
+        // Модальные окна
+        const loginModal = document.getElementById('loginModal');
+        const registerModal = document.getElementById('registerModal');
+        
+        // Функции
+        function openLoginModal() {
+            if (loginModal) {
+                loginModal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            }
+        }
+        
+        function openRegisterModal() {
+            if (registerModal) {
+                registerModal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            }
+        }
+        
+        function closeLoginModal() {
+            if (loginModal) {
+                loginModal.style.display = 'none';
+                document.body.style.overflow = '';
+            }
+        }
+        
+        function closeRegisterModal() {
+            if (registerModal) {
+                registerModal.style.display = 'none';
+                document.body.style.overflow = '';
+            }
+        }
+        
+        // Назначаем обработчики
+        if (openLoginBtn) {
+            openLoginBtn.onclick = openLoginModal;
+        }
+        
+        if (openRegisterBtn) {
+            openRegisterBtn.onclick = openRegisterModal;
+        }
+        
+        if (closeLoginBtn) {
+            closeLoginBtn.onclick = closeLoginModal;
+        }
+        
+        if (closeRegisterBtn) {
+            closeRegisterBtn.onclick = closeRegisterModal;
+        }
+        
+        // Переключение между окнами
+        if (switchToLoginLink) {
+            switchToLoginLink.onclick = function(e) {
+                e.preventDefault();
+                closeRegisterModal();
+                setTimeout(openLoginModal, 100);
+            };
+        }
+        
+        if (switchToRegisterLink) {
+            switchToRegisterLink.onclick = function(e) {
+                e.preventDefault();
+                closeLoginModal();
+                setTimeout(openRegisterModal, 100);
+            };
+        }
+        
+        // Закрытие по клику вне окна
+        [loginModal, registerModal].forEach(modal => {
+            if (modal) {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        if (modal.id === 'loginModal') closeLoginModal();
+                        if (modal.id === 'registerModal') closeRegisterModal();
+                    }
+                });
+            }
+        });
+        
+        // Закрытие по ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeLoginModal();
+                closeRegisterModal();
+            }
+        });
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Тест API</title>
+</head>
+<body>
+    <h1>Тест API Marvel Rivals</h1>
+    <button onclick="testAPI()">Тест API</button>
+    <button onclick="testHeroes()">Тест Герои</button>
+    <button onclick="testRegister()">Тест Регистрация</button>
+    <div id="result"></div>
+    
+    <script>
+        const API_BASE_URL = 'http://localhost:3001/api';
+        
+        async function testAPI() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/test`);
+                const data = await response.json();
+                document.getElementById('result').innerHTML = 
+                    `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                document.getElementById('result').innerHTML = 
+                    `❌ Ошибка: ${error.message}`;
+            }
+        }
+        
+        async function testHeroes() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/heroes`);
+                const data = await response.json();
+                document.getElementById('result').innerHTML = 
+                    `<h3>Герои (${data.data?.heroes?.length || 0})</h3>
+                     <pre>${JSON.stringify(data.data.heroes.slice(0, 3), null, 2)}</pre>`;
+            } catch (error) {
+                document.getElementById('result').innerHTML = 
+                    `❌ Ошибка: ${error.message}`;
+            }
+        }
+        
+        async function testRegister() {
+            const testData = {
+                username: 'test_' + Date.now(),
+                email: 'test' + Date.now() + '@test.com',
+                password: '123456'
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(testData)
+                });
+                
+                const data = await response.json();
+                document.getElementById('result').innerHTML = 
+                    `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                document.getElementById('result').innerHTML = 
+                    `❌ Ошибка: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>

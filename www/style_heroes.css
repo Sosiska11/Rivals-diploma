@@ -1,0 +1,338 @@
+:root {
+    --red: #e62429;
+    --dark: #202020;
+    --light: #f5f5f5;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--dark);
+    color: var(--light);
+    font-family: "Anonymous Pro", monospace;
+}
+
+/* Стили хедера */
+#mainHeader {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background-color: transparent;
+    z-index: 1000;
+    transition: all 0.3s ease;
+}
+
+#mainHeader.scrolled {
+    background-color: rgba(34, 34, 34, 0.95);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.logo{
+    margin-left: 5%;
+}
+
+.logo img {
+    width: 170px;
+}
+
+/* Бургер-меню */
+.burger-menu {
+    display: none;
+    cursor: pointer;
+    z-index: 1001;
+}
+
+.burger-menu span {
+    display: block;
+    width: 25px;
+    height: 3px;
+    background-color: white;
+    margin: 5px 0;
+    transition: all 0.3s ease;
+}
+
+/* Навигация */
+nav{
+    margin-left: 7%;
+}
+nav ul {
+    display: flex;
+    list-style: none;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    padding: 0.5rem 1.5rem;
+    font-size: 1.2rem;
+    transition: all 0.3s;
+    position: relative;
+}
+
+nav a:hover {
+    color: var(--red);
+}
+
+nav a::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: var(--red);
+    transition: all 0.3s;
+}
+
+nav a:hover::after {
+    width: 50%;
+    left: 25%;
+}
+
+/* Основной контент */
+main {
+    padding-top: 80px;
+}
+
+.heroes-container {
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.page-title {
+    text-align: center;
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+    color: var(--red);
+}
+
+/* Фильтры героев */
+.filters {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.filter-btn {
+    background-color: #333;
+    color: white;
+    border: none;
+    padding: 0.5rem 1.5rem;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.filter-btn:hover, .filter-btn.active {
+    background-color: var(--red);
+}
+
+/* Сетка героев */
+.heroes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 2rem;
+}
+
+.hero-card {
+    background-size: cover;
+    background-position: center;
+    height: 400px;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    transform: translateY(50px);
+    opacity: 0;
+    transition: all 0.6s ease-out;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+}
+
+.hero-card.visible {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.hero-info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0,0,0,0.9));
+    padding: 1.5rem;
+    transform: translateY(100%);
+    transition: transform 0.4s ease;
+}
+
+.hero-card:hover .hero-info {
+    transform: translateY(0);
+}
+
+.hero-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--red);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    mix-blend-mode: multiply;
+}
+
+.hero-card:hover::before {
+    opacity: 0.3;
+}
+
+.hero-name {
+    font-size: 1.8rem;
+    margin-bottom: 0.2rem;
+}
+
+.hero-difficult{
+    margin-bottom: 0.2rem;
+    font-size: 25px;
+}
+
+.hero-role {
+    color: #ccc;
+    font-size: 1rem;
+}
+
+footer {
+    background-color: #111;
+    text-align: center;
+    padding: 2rem;
+    margin-top: 2rem;
+}
+
+@keyframes cardFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+.hero-card:hover {
+    animation: cardFloat 3s ease-in-out infinite;
+}
+
+/* Мобильные стили */
+@media (max-width: 768px) {
+    .burger-menu {
+        display: block;
+    }
+    
+    nav {
+        position: fixed;
+        top: 0;
+        right: -100%;
+        width: 70%;
+        height: 100vh;
+        background-color: #222;
+        transition: all 0.5s ease;
+        padding-top: 80px;
+        z-index: 1000;
+    }
+    
+    nav.active {
+        right: 0;
+    }
+    
+    nav ul {
+        flex-direction: column;
+        padding: 0 1rem;
+    }
+    
+    nav a {
+        display: block;
+        padding: 1rem;
+        border-bottom: 1px solid #444;
+    }
+    
+    .burger-menu.active span:nth-child(1) {
+        transform: rotate(45deg) translate(5px, 5px);
+    }
+    
+    .burger-menu.active span:nth-child(2) {
+        opacity: 0;
+    }
+    
+    .burger-menu.active span:nth-child(3) {
+        transform: rotate(-45deg) translate(7px, -6px);
+    }
+    
+    .heroes-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Стили для кнопки избранного */
+.favorite-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0,0,0,0.7);
+    border: none;
+    color: white;
+    padding: 0.5rem;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    z-index: 10;
+}
+
+.favorite-btn:hover {
+    background: #e62429;
+    transform: scale(1.1);
+}
+
+.favorite-btn.active {
+    background: #e62429;
+    color: gold;
+}
+
+.favorite-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.show-favorites-btn {
+    padding: 10px 20px;
+    background: #333;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-family: "Anonymous Pro", monospace;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.show-favorites-btn:hover {
+    background: #444;
+}
+
+.heart-icon {
+    color: gold;
+}
