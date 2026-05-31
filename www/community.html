@@ -472,11 +472,23 @@
         
         // Назначаем обработчики
         if (openLoginBtn) {
-            openLoginBtn.onclick = openLoginModal;
+            openLoginBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (window.authService && window.authService.isAuthenticated()) {
+                    window.authService.logout();
+                } else if (typeof openLoginModal === 'function') {
+                    openLoginModal();
+                }
+            });
         }
         
         if (openRegisterBtn) {
-            openRegisterBtn.onclick = openRegisterModal;
+            openRegisterBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (typeof openRegisterModal === 'function') {
+                    openRegisterModal();
+                }
+            });
         }
         
         if (closeLoginBtn) {

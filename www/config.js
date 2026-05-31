@@ -174,21 +174,11 @@ class SimpleAuthService {
         
         if (user) {
             loginBtn.innerHTML = `👤 ${user.username}`;
-            loginBtn.onclick = () => {
-                if (confirm(`Выйти из аккаунта ${user.username}?`)) {
-                    this.logout();
-                }
-            };
             loginBtn.title = 'Выйти из аккаунта';
             
             if (registerBtn) registerBtn.style.display = 'none';
         } else {
             loginBtn.innerHTML = 'Войти';
-            loginBtn.onclick = () => {
-                if (typeof window.openLoginModal === 'function') {
-                    window.openLoginModal();
-                }
-            };
             loginBtn.title = 'Войти в аккаунт';
             
             if (registerBtn) registerBtn.style.display = 'block';
@@ -579,6 +569,7 @@ window.openLoginModal = openLoginModal;
 window.openRegisterModal = openRegisterModal;
 window.closeModal = closeModal;
 
+// ========== ОБРАБОТЧИКИ ФОРМ (для всех страниц) ==========
 document.addEventListener('DOMContentLoaded', () => {
     if (window.authService) {
         window.authService.updateAuthUI();
@@ -595,6 +586,67 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     setupModalHandlers();
+    
+    // ========== ОБРАБОТКА ФОРМ ВХОДА И РЕГИСТРАЦИИ ==========
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+
+    if (loginForm && window.authService) {
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = this.querySelector('#loginEmail').value;
+            const password = this.querySelector('#loginPassword').value;
+            const errorElement = this.querySelector('#loginError');
+
+            try {
+                const result = await window.authService.login({ email, password });
+                showNotification(`С возвращением, ${result.user.username}!`);
+                
+                const loginModal = document.getElementById('loginModal');
+                if (loginModal) closeModal(loginModal);
+                this.reset();
+            } catch (error) {
+                if (errorElement) {
+                    errorElement.textContent = error.message || 'Неверный email или пароль';
+                } else {
+                    showNotification('Ошибка входа: ' + error.message);
+                }
+            }
+        });
+    }
+
+    if (registerForm && window.authService) {
+        registerForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = this.querySelector('#username').value;
+            const email = this.querySelector('#email').value;
+            const password = this.querySelector('#password').value;
+            const confirmPassword = this.querySelector('#confirmPassword').value;
+            
+            if (password !== confirmPassword) {
+                showNotification('Пароли не совпадают!');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showNotification('Пароль должен содержать не менее 6 символов');
+                return;
+            }
+
+            try {
+                const result = await window.authService.register({ username, email, password });
+                showNotification(`Добро пожаловать в команду, ${username}!`);
+                
+                const registerModal = document.getElementById('registerModal');
+                if (registerModal) closeModal(registerModal);
+                this.reset();
+            } catch (error) {
+                showNotification('Ошибка регистрации: ' + error.message);
+            }
+        });
+    }
 });
 
 function setupModalHandlers() {
