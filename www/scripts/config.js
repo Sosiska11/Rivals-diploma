@@ -569,7 +569,7 @@ window.openLoginModal = openLoginModal;
 window.openRegisterModal = openRegisterModal;
 window.closeModal = closeModal;
 
-// ========== ОБРАБОТЧИКИ ФОРМ (для всех страниц) ==========
+// ========== ОБРАБОТЧИКИ ФОРМ И МОДАЛЬНЫХ ОКОН (для всех страниц) ==========
 document.addEventListener('DOMContentLoaded', () => {
     if (window.authService) {
         window.authService.updateAuthUI();
@@ -585,7 +585,32 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
+    // Подключение универсальных обработчиков модальных окон
     setupModalHandlers();
+
+    // Кнопка входа/выхода в шапке
+    const openLoginBtn = document.getElementById('openLoginBtn');
+    if (openLoginBtn) {
+        openLoginBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            if (window.authService && window.authService.isAuthenticated()) {
+                window.authService.logout();
+            } else if (typeof openLoginModal === 'function') {
+                openLoginModal();
+            }
+        });
+    }
+
+    // Кнопка регистрации (например, в подписке или шапке)
+    const openRegisterBtn = document.getElementById('openModalBtn');
+    if (openRegisterBtn) {
+        openRegisterBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            if (typeof openRegisterModal === 'function') {
+                openRegisterModal();
+            }
+        });
+    }
     
     // ========== ОБРАБОТКА ФОРМ ВХОДА И РЕГИСТРАЦИИ ==========
     const loginForm = document.getElementById('loginForm');
@@ -650,27 +675,63 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function setupModalHandlers() {
-    const closeButtons = document.querySelectorAll('.close-modal, .modal-close');
+    const loginModal = document.getElementById('loginModal');
+    const registerModal = document.getElementById('registerModal');
+
+    // Кнопки закрытия (.close-btn, .close-modal, .modal-close)
+    const closeButtons = document.querySelectorAll('.close-btn, .close-modal, .modal-close, #closeLoginBtn, #closeRegisterBtn');
     closeButtons.forEach(btn => {
-        btn.addEventListener('click', function() {
-            const modal = this.closest('.modal') || 
-                         document.getElementById('loginModal') || 
-                         document.getElementById('registerModal');
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const modal = this.closest('.modal-overlay') || 
+                          this.closest('.modal') || 
+                          loginModal || 
+                          registerModal;
             if (modal) closeModal(modal);
         });
     });
-    
-    const modals = document.querySelectorAll('.modal');
-    modals.forEach(modal => {
-        modal.addEventListener('click', function(e) {
-            if (e.target === this) closeModal(this);
+
+    // Переключение между модальными окнами
+    const switchToLoginLink = document.getElementById('switchToLoginLink');
+    if (switchToLoginLink) {
+        switchToLoginLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (registerModal) closeModal(registerModal);
+            setTimeout(() => {
+                if (typeof openLoginModal === 'function') openLoginModal();
+            }, 100);
+        });
+    }
+
+    const switchToRegisterLink = document.getElementById('switchToRegisterLink');
+    if (switchToRegisterLink) {
+        switchToRegisterLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (loginModal) closeModal(loginModal);
+            setTimeout(() => {
+                if (typeof openRegisterModal === 'function') openRegisterModal();
+            }, 100);
+        });
+    }
+
+    // Закрытие по клику вне окна (по фону .modal-overlay или .modal)
+    const overlays = document.querySelectorAll('.modal-overlay, .modal');
+    overlays.forEach(overlay => {
+        overlay.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal(this);
+            }
         });
     });
-    
+
+    // Закрытие по клавише ESC
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
-            modals.forEach(modal => {
-                if (modal.style.display === 'flex') closeModal(modal);
+            const activeOverlays = document.querySelectorAll('.modal-overlay, .modal');
+            activeOverlays.forEach(overlay => {
+                if (overlay.style.display === 'flex' || overlay.style.display === 'block') {
+                    closeModal(overlay);
+                }
             });
         }
     });
