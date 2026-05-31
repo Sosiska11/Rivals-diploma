@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     heroVideo.style.display = 'none';
                     const hero = document.querySelector('.hero');
                     if (hero) {
-                        hero.style.background = 'url("img_main/marvel-rivals-bg.jpg") center/cover';
+                        hero.style.background = 'url("assets/images/main/marvel-rivals-bg.jpg") center/cover';
                     }
                 });
             }
@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
             
             const video = document.createElement('video');
-            video.src = 'img_main/trailer.mp4';
+            video.src = 'assets/videos/trailer.mp4';
             video.controls = true;
             video.style.cssText = `
                 width: 90%;

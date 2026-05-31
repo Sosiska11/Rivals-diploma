@@ -88,7 +88,7 @@ function initHeroModals() {
                 real_name: "Энтони Эдвард 'Тони' Старк",
                 Difficult: "★ ★ ☆ ☆ ☆",
                 role: "Дальний бой · Технологии",
-                image: "img_heroes/Iron_Man_Hero_Portrait.webp",
+                image: "../assets/images/heroes/Iron_Man_Hero_Portrait.webp",
                 description: "Вооруженный превосходным интеллектом и нанотехнологичным боевым костюмом собственной разработки, Тони Старк стоит рядом с богами как Непобедимый Железный Человек. Его ультрасовременная броня превращает любое поле боя в его личную игровую площадку, позволяя ему украсть то внимание, которого он так отчаянно желает.",
                 abilities: [
                     {
@@ -134,7 +134,7 @@ function initHeroModals() {
                 real_name:"Питер Паркер",
                 Difficult: "★ ★ ★ ★ ★",
                 role: "Ближний бой · Мобильность",
-                image: "img_heroes/Spider-Man_Hero_Portrait.webp",
+                image: "../assets/images/heroes/Spider-Man_Hero_Portrait.webp",
                 description: "Размахивая вокруг арены на своих фирменных паутинных линиях, ваш дружелюбный сосед Человек-паук, он же Питер Паркер, застает своих соперников врасплох хитрыми, липкими взрывами паутины и неожиданными атаками сверху. Берегитесь... вот и Человек-паук!",
                 abilities: [
                     {
@@ -193,7 +193,7 @@ function initHeroModals() {
                 role: "Ближний бой · Рывок",
                 Difficult: "★ ★ ★ ★ ☆",
                 real_name: "Т'Чалла",
-                image: "img_heroes/Black_Panther_Hero_Portrait.webp",
+                image: "../assets/images/heroes/Black_Panther_Hero_Portrait.webp",
                 description: "Т'Чалла, король Ваканды, владеет идеальным сочетанием передовой технологии Вибраниума и родовой силы, полученной от Бога-Пантеры, Баста. Черная Пантера выжидает, пока не проникнет в ряды врага и не начнет свою охоту.",
                 abilities: [
                     {
@@ -239,7 +239,7 @@ function initHeroModals() {
                 real_name: "Ильяна Николаевна Распутина",
                 Difficult: "★ ★ ★ ☆ ☆",
                 role: "Ближний бой · Порталы",
-                image: "img_heroes/Magik_Hero_Portrait.webp",
+                image: "../assets/images/heroes/Magik_Hero_Portrait.webp",
                 description: "Обученная темным искусствам и владеющая своим могучим Мечом Души, Мэджик прыгает через порталы, чтобы с легкостью перемещаться по арене. Как только Ульяна превратится в демонического Темного Дитя, все, кто осмелится противостоять ей, падут перед ее беспощадным клинком.",
                 abilities: [
                     {
@@ -289,7 +289,7 @@ function initHeroModals() {
                 real_name: "Локи Лауфейсон",
                 Difficult: "★ ★ ★ ★ ☆",
                 role: "Дальний бой · Копии",
-                image: "img_heroes/Loki_Hero_Portrait.webp",
+                image: "../assets/images/heroes/Loki_Hero_Portrait.webp",
                 description: "Что может быть более захватывающим для Бога Озорства, чем перехитрить своих врагов? Хитрый обманщик Локи использует свои иллюзии и способности к изменению формы, чтобы вступать в бой и выходить из него, играя с врагами на каждом шагу.",
                 abilities: [
                     {
@@ -336,7 +336,7 @@ function initHeroModals() {
                 real_name: "Ракета Енот",
                 Difficult: "★ ☆ ☆ ☆ ☆",
                 role: "Дальний бой · Воскрешение",
-                image: "img_heroes/Rocket_Raccoon_Hero_Portrait.webp",
+                image: "../assets/images/heroes/Rocket_Raccoon_Hero_Portrait.webp",
                 description: "Ракета, возможно, не выглядит как технический гений или эксперт-тактик, но любой, кто когда-либо попадал в его список, быстро жалел, что недооценивал его. Этот сообразительный космический солдат одинаково стремится усилить своих товарищей по команде и получить награды за своих врагов.",
                 abilities: [
                     {
@@ -382,7 +382,7 @@ function initHeroModals() {
                 real_name: "Тор Одинсон",
                 Difficult: "★ ★ ★ ☆ ☆",
                 role: "Ближний бой · Сокрушение",
-                image: "img_heroes/Thor_Hero_Portrait.webp",
+                image: "../assets/images/heroes/Thor_Hero_Portrait.webp",
                 description: "Сын Одина использует свою божественную силу, чтобы вызывать гром и молнии, обрушивая на врагов неумолимую ярость. С могучим молотом Мьёльниром в руке Тор без усилий утверждает свое господство на поле боя.",
                 abilities: [
                     {
@@ -428,7 +428,7 @@ function initHeroModals() {
                 real_name: "Линь Ли (林烈)",
                 Difficult: "★ ★ ★ ★ ☆",
                 role: "Ближний бой · Скорость",
-                image: "img_heroes/Iron_Fist_Hero_Portrait.webp",
+                image: "../assets/images/heroes/Iron_Fist_Hero_Portrait.webp",
                 description: "Линь Ли — мастер китайских боевых искусств, некогда владевший сломанным мечом Фу Си. Соединив его осколки с могучей энергией Ци Шоу-Лао, он готов обрушить на врагов грацию и силу парящего дракона, став бессмертным Железным Кулаком.",
                 abilities: [
                     {
@@ -482,7 +482,7 @@ function initHeroModals() {
                 real_name: "Эдвард Чарльз Аллан «Эдди» Брок",
                 Difficult: "★ ☆ ☆ ☆ ☆",
                 role: "Средний бой · Сокрушение",
-                image: "img_heroes/Venom_Hero_Portrait.webp",
+                image: "../assets/images/heroes/Venom_Hero_Portrait.webp",
                 description: "Используя свое симбиотическое тело как идеальное живое оружие, Эдди Брок и его инопланетный союзник всегда готовы обрушить жестокие атаки на любого, кого он считает врагом. Те, кто попал в ловушку щупалец Венома, не имеют иного выбора, кроме как сдаться этому ненасытному хищнику.",
                 abilities: [
                     {
@@ -528,7 +528,7 @@ function initHeroModals() {
                 real_name: "Богомол",
                 Difficult: "★ ☆ ☆ ☆ ☆",
                 role: "Дальний бой · Контроль",
-                image: "img_heroes/Mantis_Hero_Portrait.webp",
+                image: "../assets/images/heroes/Mantis_Hero_Portrait.webp",
                 description: "Мантис использует свои впечатляющие умственные способности и склонность к контролю над растениями, чтобы сплотить любую команду, с которой она сражается. Ее силы подключаются к безграничному потоку жизненной энергии, нежно питая все, к чему она прикасается.",
                 abilities: [
                     {
@@ -574,7 +574,7 @@ function initHeroModals() {
                 real_name: "Джеймс Хоулетт",
                 Difficult: "★ ★ ★ ☆ ☆",
                 role: "Ближний бой · Вампиризм",
-                image: "img_heroes/Wolverine_Hero_Portrait.webp",
+                image: "../assets/images/heroes/Wolverine_Hero_Portrait.webp",
                 description: "Благодаря своему регенеративному исцеляющему фактору и ярости берсерка, многовековой Логан может бороться, несмотря на сильнейшую боль, чтобы сразиться когтями с любым врагом. Росомаха готов разорвать все препятствия на своем пути своими адамантовыми когтями.",
                 abilities: [
                     {
@@ -620,7 +620,7 @@ function initHeroModals() {
                 real_name: "Джеймс Бьюкенен «Баки» Барнс",
                 Difficult: "★ ★ ★ ☆ ☆",
                 role: "Комбинированный бой · Крюк",
-                image: "img_heroes/Winter_Soldier_Hero_Portrait.webp",
+                image: "../assets/images/heroes/Winter_Soldier_Hero_Portrait.webp",
                 description: "Ужасающие эксперименты превратили его в убийцу с промытыми мозгами, но теперь Баки снова контролирует свою судьбу. Благодаря своей усовершенствованной механической руке Зимний солдат готов наносить сокрушительные удары любому врагу на своем пути!",
                 abilities: [
                     {
@@ -662,7 +662,7 @@ function initHeroModals() {
                 real_name: "Дорин Аллен Грин",
                 Difficult: "★ ☆ ☆ ☆ ☆",
                 role: "Дальний бой · Бомбы",
-                image: "img_heroes/Squirrel_Girl_Hero_Portrait.webp",
+                image: "../assets/images/heroes/Squirrel_Girl_Hero_Portrait.webp",
                 description: "Обладая лишь силами обычной белки, Дорин Грин каким-то образом умудряется побеждать, казалось бы, непобедимых врагов самыми неожиданными способами. Любой враг, который не учитывает ее, обязательно падет от рук Непобедимой Девочки-Белки!",
                 abilities: [
                     {
@@ -700,7 +700,7 @@ function initHeroModals() {
                 real_name: "Пенни Паркер (ペニ・パーカー)",
                 Difficult: "★ ★ ★ ★ ☆",
                 role: "Дальний бой · Контроль",
-                image: "img_heroes/Peni_Parker_Hero_Portrait.webp",
+                image: "../assets/images/heroes/Peni_Parker_Hero_Portrait.webp",
                 description: "Пени Паркер, может, и молода, но она храбро стоит на передовой, чтобы защитить Паутину Жизни и Судьбы. Вместе эта юная вундеркинд и ее новейший мех, сенсационный SP//dr, составляют самый захватывающий дуэт на поле боя!",
                 abilities: [
                     {
@@ -746,7 +746,7 @@ function initHeroModals() {
                 real_name: "Грут",
                 Difficult: "★ ★ ☆ ☆ ☆",
                 role: "Дальний бой · Контроль",
-                image: "img_heroes/Groot_Hero_Portrait.webp",
+                image: "../assets/images/heroes/Groot_Hero_Portrait.webp",
                 description: "Колосс флоры с Планеты X, инопланетянин, известный как Грут, демонстрирует повышенную жизненную силу и способность манипулировать всеми формами растительности. Крепкий, как возвышающееся дерево, Грут прокладывает свой собственный путь, выступая в качестве молчаливого, но надежного первопроходца команды.",
                 abilities: [
                     {
@@ -792,7 +792,7 @@ function initHeroModals() {
                 real_name: "Соль Хи (설희)",
                 Difficult: "★ ★ ☆ ☆ ☆",
                 role: "Дальний бой · Исцеление",
-                image: "img_heroes/Luna_Snow_Hero_Portrait.webp",
+                image: "../assets/images/heroes/Luna_Snow_Hero_Portrait.webp",
                 description: "В равной степени поп-звезда и супергерой, Луна Сноу устраивает ослепительное шоу, используя как свои светлые, так и темные ледяные силы. Арена — это ее сцена, где Соль Хи и ее команда организуют захватывающие представления, которые приносят ей все больше поклонников и побед.",
                 abilities: [
                     {
@@ -838,7 +838,7 @@ function initHeroModals() {
                 real_name: "Локи Лауфейсон",
                 Difficult: "★ ★ ★ ★ ☆",
                 role: "Дальний бой · Копии",
-                image: "img_heroes/Hela_Hero_Portrait.webp",
+                image: "../assets/images/heroes/Hela_Hero_Portrait.webp",
                 description: "Богиня смерти и правительница Хельхейма, Хела вооружена магией некропсии, способной создавать оружие из чистой энергии. Её сила растёт на поле боя, где царит хаос и гибель.",
     abilities: [
         {
@@ -885,7 +885,7 @@ function initHeroModals() {
             real_name: "Клинт Бартон",
             Difficult: "★ ★ ☆ ☆ ☆",
             role: "Дальний бой · Ослабление",
-            image: "img_heroes/hawkeye.png",
+            image: "../assets/images/heroes/hawkeye.png",
             description: "Мастер-лучник с невероятной меткостью и тактическим мышлением. Использует широкий арсенал специальных стрел для поддержки команды и подавления врагов.",
     abilities: [
         {
@@ -932,7 +932,7 @@ function initHeroModals() {
             real_name: "Джефф",
             Difficult: "★ ★ ★ ★ ☆",
             role: "Дальний бой · Контроль",
-            image: "img_heroes/jeff.jpg",
+            image: "../assets/images/heroes/jeff.jpg",
             description: "Загадочная и очаровательная сухопутная акула, Джефф обладает уникальными способностями контроля территории. Он создаёт области, которые влияют на передвижение и способности врагов.",
     abilities: [
         {
@@ -979,7 +979,7 @@ function initHeroModals() {
             real_name: "Ороро Монро",
             Difficult: "★ ★ ★ ☆ ☆",
             role: "Дальний бой · Усиление",
-            image: "img_heroes/Storm_HeroPortrait.webp",
+            image: "../assets/images/heroes/Storm_HeroPortrait.webp",
             description: "Мутант, способная управлять погодой, Шторм использует молнии, ветер и дождь, чтобы доминировать на поле боя и усиливать союзников.",
     abilities: [
         {
@@ -1026,7 +1026,7 @@ function initHeroModals() {
             real_name: "Эрик Леншерр",
             Difficult: "★ ★ ★ ★ ☆",
             role: "Дальний бой · Щиты",
-            image: "img_heroes/Magneto_Hero_Portrait.webp",
+            image: "../assets/images/heroes/Magneto_Hero_Portrait.webp",
             description: "Властелин магнитных полей, Магнето манипулирует металлом с невероятной точностью. Он создаёт щиты, управляет позицией врагов и наносит разрушительный урон.",
     abilities: [
         {
@@ -1073,7 +1073,7 @@ function initHeroModals() {
             real_name: "Питер Квилл",
             Difficult: "★ ★ ☆ ☆ ☆",
             role: "Комбинированный бой · Скорость",
-            image: "img_heroes/star.jpg",
+            image: "../assets/images/heroes/star.jpg",
             description: "Лидер Стражи Галактики, мастер тактики и пилот. Использует реактивные сапоги для мобильности и парные бластеры для ведения скоростного боя.",
     abilities: [
         {
@@ -1120,7 +1120,7 @@ function initHeroModals() {
             real_name: "Бен Гримм",
             Difficult: "★ ★ ☆ ☆ ☆",
             role: "Ближний бой · Живучесть",
-            image: "img_heroes/thing.jpg",
+            image: "../assets/images/heroes/thing.jpg",
             abilities: [
         {
             name: "КАМЕННЫЙ КУЛАК",
@@ -1166,7 +1166,7 @@ function initHeroModals() {
             real_name: "Ванда Максимофф",
             Difficult: "★ ★ ★ ★ ☆",
             role: "Дальний бой · Разрушение",
-            image: "img_heroes/Scarlet_Witch_Hero_Portrait.webp",
+            image: "../assets/images/heroes/Scarlet_Witch_Hero_Portrait.webp",
             description: "Обладающая хаотичной магией реальности, Ванда искажает пространство вокруг себя. Её силы непредсказуемы и способны изменять саму структуру поля боя.",
     abilities: [
         {
@@ -1213,7 +1213,7 @@ function initHeroModals() {
             real_name: "Нэмор Маккензи",
             Difficult: "★ ★ ★ ☆ ☆",
             role: "Дальний бой · Турель",
-            image: "img_heroes/namor.png",
+            image: "../assets/images/heroes/namor.png",
             description: "Гибрид человека и атланта, король подводного царства. Использует трезубец и технологии Атлантиды для создания оборонительных сооружений и контроля водной стихии.",
     abilities: [
         {
@@ -1260,7 +1260,7 @@ function initHeroModals() {
             real_name: "Сай (サイ)",
             Difficult: "★ ★ ★ ★ ☆",
             role: "Комбинированный бой · Невидимость",
-            image: "img_heroes/Psylocke_Hero_Portrait.webp",
+            image: "../assets/images/heroes/Psylocke_Hero_Portrait.webp",
             description: "Мутант-телепат и мастер боевых искусств. Создаёт пси-клинки для атаки, может становиться невидимой и наносить смертоносные удары из тени.",
     abilities: [
         {
@@ -1307,7 +1307,7 @@ function initHeroModals() {
             real_name: "Тирон Джонсон и Тэнди Боуэн",
             Difficult: "★ ★ ★ ★ ★",
             role: "Комбинированный бой · Уникальность",
-            image: "img_heroes/Cloak_N_Dagger_Hero_Portrait.webp",
+            image: "../assets/images/heroes/Cloak_N_Dagger_Hero_Portrait.webp",
             description: "Дуэт героев с контрастными силами: Плащ управляет тьмой и телепортацией, Кинжал создаёт световые кинжалы. Они сражаются как единое целое, переключаясь между формами.",
     abilities: [
         {
@@ -1354,7 +1354,7 @@ function initHeroModals() {
             real_name: "Джонни Шторм",
             Difficult: "★ ★ ★ ☆ ☆",
             role: "Дальний бой · Область",
-            image: "img_heroes/torch.jpg",
+            image: "../assets/images/heroes/torch.jpg",
            description: "Член Фантастической четвёрки, способный к полёту, пирокинезу и созданию огненных конструкций. Высокомобильный заклинатель, специализирующийся на уроне по области.",
     abilities: [
         {
@@ -1401,7 +1401,7 @@ function initHeroModals() {
             real_name: "Рид Ричардс",
             Difficult: "★ ★ ★ ☆ ☆",
             role: "Комбинированный бой · Живучесть",
-            image: "img_heroes/mister.jpg",
+            image: "../assets/images/heroes/mister.jpg",
             description: "Лидер Фантастической четвёрки, обладающий эластичным телом. Может растягивать конечности для атаки на расстоянии, принимать различные формы и демонстрировать невероятную устойчивость.",
             description: "Лидер Фантастической четвёрки, обладающий эластичным телом. Может растягивать конечности для атаки на расстоянии, принимать различные формы и демонстрировать невероятную устойчивость.",
     abilities: [
@@ -1449,7 +1449,7 @@ function initHeroModals() {
             real_name: "Марк Спектор",
             Difficult: "★ ★ ★ ☆ ☆",
             role: "Дальний бой · Область",
-            image: "img_heroes/moon.png",
+            image: "../assets/images/heroes/moon.png",
             description: "Воин, наделённый силой египетского бога луны Хонсу. Его силы и решимость колеблются вместе с фазами луны. Сражается метательными капюшонами и древним оружием.",
     abilities: [
         {
@@ -1496,7 +1496,7 @@ function initHeroModals() {
             real_name: "Адам Уорлок",
             Difficult: "★ ★ ★ ★ ☆",
             role: "Дальний бой · Возрождение",
-            image: "img_heroes/Adam_Warlock_Hero_Portrait.webp",
+            image: "../assets/images/heroes/Adam_Warlock_Hero_Portrait.webp",
             description: "Искусственно созданный совершенный человек, связанный с Камнем Души. Исцеляет союзников, защищает их и обладает способностью предотвратить смерть или даже вернуть павшего товарища к жизни.",
     abilities: [
         {
@@ -1543,7 +1543,7 @@ function initHeroModals() {
             real_name: "Питер Паркер",
             Difficult: "★ ★ ★ ★ ★",
             role: "Ближний бой · Мобильность",
-            image: "img_heroes/Spider-Man_Hero_Portrait.webp",
+            image: "../assets/images/heroes/Spider-Man_Hero_Portrait.webp",
             description: "Искусственно созданный совершенный человек, связанный с Камнем Души. Исцеляет союзников, защищает их и обладает способностью предотвратить смерть или даже вернуть павшего товарища к жизни.",
     abilities: [
         {
@@ -1590,7 +1590,7 @@ function initHeroModals() {
     real_name: "Стивен Стрэндж",
     Difficult: "★ ★ ★ ★ ☆",
     role: "Дальний бой · Порталы",
-    image: "img_heroes/strange.jpg",
+    image: "../assets/images/heroes/strange.jpg",
     description: "Верховный маг Земли, защищающий реальность от мистических угроз. Манипулирует магией для нанесения урона, создания защитных сооружений и мгновенного перемещения по полю боя через порталы.",
     abilities: [
         {
@@ -1637,7 +1637,7 @@ function initHeroModals() {
             real_name: "Сьюзан Шторм-Ричардс",
             Difficult: "★ ★ ★ ☆ ☆",
             role: "Дальний бой · Невидимость",
-            image: "img_heroes/Invisible_Woman_Hero_Portrait.webp",
+            image: "../assets/images/heroes/Invisible_Woman_Hero_Portrait.webp",
             description: "Член Фантастической четвёрки, способная становиться невидимой и создавать силовые поля. Мастер контроля и поддержки, которая может защитить команду и незаметно атаковать врагов.",
     abilities: [
         {
@@ -1683,7 +1683,7 @@ function initHeroModals() {
             real_name: "Фрэнк Кастл",
             Difficult: "★ ★ ☆ ☆ ☆",
             role: "Комбинированный бой · Турель",
-            image: "img_heroes/punisher.jpg",
+            image: "../assets/images/heroes/punisher.jpg",
             description: "Бывший морской котик, ведущий беспощадную войну с преступностью. Использует огромный арсенал огнестрельного оружия, взрывчатки и тактических приёмов для уничтожения врагов.",
             abilities: [
                 {
@@ -1730,7 +1730,7 @@ function initHeroModals() {
                 real_name: "Доктор Роберт Брюс Бeннер",
                 Difficult: "★ ★ ☆ ☆ ☆",
                 role: "Ближний бой · Щиты",
-                image: "img_heroes/Hulk_Hero_Portrait.webp",
+                image: "../assets/images/heroes/Hulk_Hero_Portrait.webp",
     description: "Невероятно сильный и живучий монстр. Чем больше получает урона, тем сильнее злится. Использует своё тело как оружие и щит, способен сокрушать врагов и поглощать огромное количество урона.",
                 abilities: [
                     {
@@ -1777,7 +1777,7 @@ function initHeroModals() {
             real_name: "Стив Роджерс",
             Difficult: "★ ★ ☆ ☆ ☆",
             role: "Защита · Лидер",
-            image: "img_heroes/Captain_America_Hero_Portrait.webp",
+            image: "../assets/images/heroes/Captain_America_Hero_Portrait.webp",
             description: "Символ надежды и тактический лидер Мстителей. Мастер ближнего боя со своим несокрушимым щитом, который может блокировать атаки и использоваться как метательное оружие.",
                 abilities: [
         {
@@ -1824,7 +1824,7 @@ function initHeroModals() {
             real_name: "Наташа Романофф",
             Difficult: "★ ★ ★ ☆ ☆",
             role: "Комбинированный бой · Винтовка",
-            image: "img_heroes/Black_Widow_Hero_Portrait.webp",
+            image: "../assets/images/heroes/Black_Widow_Hero_Portrait.webp",
             description: "Высококвалифицированный шпион, мастер боевых искусств и тактический стрелок. Эффективна как на дальних, так и на ближних дистанциях, используя скрытность и высокие технологии.",
     abilities: [
         {

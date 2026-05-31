@@ -5,7 +5,7 @@
     min-height: 400px; /* минимальная высота */
     max-height: 600px; /* максимальная высота */
     background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)),
-                url('img_main/marvel-rivals-bg.png') center/cover;
+                url('../assets/images/main/marvel-rivals-bg.png') center/cover;
     display: flex;
     align-items: center;
     justify-content: center;

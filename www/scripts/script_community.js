@@ -129,7 +129,7 @@ class CommunityManager {
                         <img src="${this.getUserAvatar(post.username)}"
                              alt="${post.username}"
                              class="author-avatar"
-                             onerror="this.src='icons/avatar-default.jpg'">
+                             onerror="this.src='../assets/icons/avatars/avatar-default.jpg'">
                         <div class="author-info">
                             <h4>${post.username}</h4>
                             <span class="post-time">${this.formatTime(post.created_at)}</span>
@@ -300,7 +300,7 @@ class CommunityManager {
                             <img src="${this.getUserAvatar(post.username)}"
                                  alt="${post.username}"
                                  class="post-modal-author-avatar"
-                                 onerror="this.src='icons/avatar-default.jpg'">
+                                 onerror="this.src='../assets/icons/avatars/avatar-default.jpg'">
                             <div class="post-modal-author-info">
                                 <h3>${this.escapeHtml(post.username)}</h3>
                                 <div class="post-modal-meta">
@@ -363,7 +363,7 @@ class CommunityManager {
                                                     <img src="${this.getUserAvatar(comment.username)}" 
                                                          alt="${comment.username}"
                                                          class="post-modal-comment-author-avatar"
-                                                         onerror="this.src='icons/avatar-default.jpg'">
+                                                         onerror="this.src='../assets/icons/avatars/avatar-default.jpg'">
                                                     <span>${this.escapeHtml(comment.username)}</span>
                                                 </div>
                                                 <div class="post-modal-comment-time">${this.formatTime(comment.created_at)}</div>
@@ -489,13 +489,13 @@ class CommunityManager {
 
     getUserAvatar(username) {
         const avatarMap = {
-            'n1s4': 'icons/avatar-default.jpg',
-            'n1sp1x': 'icons/avatar-default.jpg',
-            'testuser': 'icons/avatar-user3.jpg',
-            'admin': 'icons/avatar-user2.jpg',
-            'lol': 'icons/avatar-user1.jpg',
+            'n1s4': '../assets/icons/avatars/avatar-default.jpg',
+            'n1sp1x': '../assets/icons/avatars/avatar-default.jpg',
+            'testuser': '../assets/icons/avatars/avatar-user3.jpg',
+            'admin': '../assets/icons/avatars/avatar-user2.jpg',
+            'lol': '../assets/icons/avatars/avatar-user1.jpg',
         };
-        return avatarMap[username] || 'icons/avatar-default.jpg';
+        return avatarMap[username] || '../assets/icons/avatars/avatar-default.jpg';
     }
 
     setupEventListeners() {
@@ -552,7 +552,7 @@ class CommunityManager {
         const userAvatar = document.getElementById('userAvatar');
         if (userAvatar && this.currentUser) {
             userAvatar.src = this.getUserAvatar(this.currentUser.username);
-            userAvatar.onerror = function() { this.src = 'icons/avatar-default.jpg'; };
+            userAvatar.onerror = function() { this.src = '../assets/icons/avatars/avatar-default.jpg'; };
         }
         
         const postForm = document.querySelector('.create-post-form');

@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style_main.css">
-    <link rel="stylesheet" href="style_modal.css">
+    <link rel="stylesheet" href="styles/style_main.css">
+    <link rel="stylesheet" href="styles/style_modal.css">
     <title>Marvel Rivals | Официальный фан-сайт</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Anonymous+Pro:ital,wght@0,400;0,700;1,400;1,700&display=swap');
@@ -49,12 +49,12 @@
 </head>
 <body>
     <header id="mainHeader">
-        <a href="https://www.neteasegames.com/m/"><img src="NetEase-logo.png" alt=""></a>
+        <a href="https://www.neteasegames.com/m/"><img src="assets/images/main/NetEase-logo.png" alt=""></a>
         <nav>
             <ul>
                 <li><a href="index.html">Главная</a></li>
-                <li><a href="heroes.html">Герои</a></li>
-                <li><a href="community.html">Сообщество</a></li>
+                <li><a href="pages/heroes.html">Герои</a></li>
+                <li><a href="pages/community.html">Сообщество</a></li>
             </ul>
         </nav>
         <div class="auth-buttons">
@@ -71,12 +71,12 @@
         <section class="hero">
         <!-- Видеофон -->
         <video autoplay muted loop playsinline class="hero-video">
-            <source src="img_main/video_bg.mp4" type="video/mp4">
+            <source src="assets/videos/video_bg.mp4" type="video/mp4">
             Ваш браузер не поддерживает видео.
         </video>
         
         <div class="hero-content">
-            <img src="logo.svg" alt="">
+            <img src="assets/images/main/logo.svg" alt="">
             <p>Столкните легендарных героев и злодеев Marvel в эпических командных сражениях</p>
             <button class="btn" id="watchTrailer">Смотреть трейлер</button>
         </div>
@@ -99,31 +99,31 @@
     
     <!-- Character Showcase Section -->
     <section class="character-showcase">
-        <div class="character-card" style="background-image: url('img_heroes/ironman.jpg');">
+        <div class="character-card" style="background-image: url('assets/images/heroes/ironman.jpg');">
             <div class="character-info">
                 <h3>Железный Человек</h3>
                 <p>Дальний бой · Технологии</p>
             </div>
         </div>
-        <div class="character-card" style="background-image: url('img_heroes/spiderman.jpg');">
+        <div class="character-card" style="background-image: url('assets/images/heroes/spiderman.jpg');">
             <div class="character-info">
                 <h3>Человек-Паук</h3>
                 <p>Ближний бой · Мобильность</p>
             </div>
         </div>
-        <div class="character-card" style="background-image: url('img_heroes/strange.jpg');">
+        <div class="character-card" style="background-image: url('assets/images/heroes/strange.jpg');">
             <div class="character-info">
                 <h3>Доктор Стрендж</h3>
                 <p>Дальний бой · Порталы</p>
             </div>
         </div>
-        <div class="character-card" style="background-image: url('img_heroes/invisblewoman.jpg');">
+        <div class="character-card" style="background-image: url('assets/images/heroes/invisblewoman.jpg');">
             <div class="character-info">
                 <h3>Женщина неведимка</h3>
                 <p>Дальний бой · Невидимость</p>
             </div>
         </div>
-        <div class="character-card" style="background-image: url('img_heroes/punisher.jpg');">
+        <div class="character-card" style="background-image: url('assets/images/heroes/punisher.jpg');">
             <div class="character-info">
                 <h3>Каратель</h3>
                 <p>Комбинированный бой · Турель</p>
@@ -187,7 +187,7 @@
         <h2 style="text-align: center;">Последние новости</h2>
         <div class="news-grid">
             <div class="news-item">
-                <div class="news-image" style="background-image: url('img_main/doom.jpg');"></div>
+                <div class="news-image" style="background-image: url('assets/images/main/doom.jpg');"></div>
                 <div class="news-content">
                     <div class="news-date">10 марта 2025</div>
                     <h3>Новый персонаж: Доктор Дум</h3>
@@ -195,7 +195,7 @@
                 </div>
             </div>
             <div class="news-item">
-                <div class="news-image" style="background-image: url('img_main/asgard.jpg');"></div>
+                <div class="news-image" style="background-image: url('assets/images/main/asgard.jpg');"></div>
                 <div class="news-content">
                     <div class="news-date">8 февраля 2025</div>
                     <h3>Карта "Асгард"</h3>
@@ -203,7 +203,7 @@
                 </div>
             </div>
             <div class="news-item">
-                <div class="news-image" style="background-image: url('img_main/season.jpg');"></div>
+                <div class="news-image" style="background-image: url('assets/images/main/season.jpg');"></div>
                 <div class="news-content">
                     <div class="news-date">1 марта 2025</div>
                     <h3>Новый сезон в апреле</h3>
@@ -220,9 +220,9 @@
         <p>© 2025 Курсовая по вселенной Marvel Rivals. Неофициальный ресурс.</p>
         <p>Все права на Marvel Rivals принадлежат Marvel и NetEase.</p>
         <div style="margin-top: 1rem;">
-            <a href="#"><img src="icons8-твиттерх-50.png" alt="Social" style="height: 40px; margin: 0 10px;"></a>
-            <a href="#"><img src="icons8-vk-50.png" alt="Social" style="height: 40px; margin: 0 10px;"></a>
-            <a href="#"><img src="icons8-телеграм-50.png" alt="Social" style="height: 40px; margin: 0 10px;"></a>
+            <a href="#"><img src="assets/icons/social/icons8-твиттерх-50.png" alt="Social" style="height: 40px; margin: 0 10px;"></a>
+            <a href="#"><img src="assets/icons/social/icons8-vk-50.png" alt="Social" style="height: 40px; margin: 0 10px;"></a>
+            <a href="#"><img src="assets/icons/social/icons8-телеграм-50.png" alt="Social" style="height: 40px; margin: 0 10px;"></a>
         </div>
     </footer>
 
@@ -268,9 +268,9 @@
             </div>
 
             <div class="social-login">
-                <button class="social-btn"><img src="icons8-vk-50.png" alt=""></button>
-                <button class="social-btn"><img src="icons8-твиттерх-50.png" alt=""></button>
-                <button class="social-btn"><img src="icons8-телеграм-50.png" alt=""></button>
+                <button class="social-btn"><img src="assets/icons/social/icons8-vk-50.png" alt=""></button>
+                <button class="social-btn"><img src="assets/icons/social/icons8-твиттерх-50.png" alt=""></button>
+                <button class="social-btn"><img src="assets/icons/social/icons8-телеграм-50.png" alt=""></button>
             </div>
 
             <div class="login-link">
@@ -328,8 +328,8 @@
         </div>
     </div>
     
-    <script src="config.js"></script>
-    <script src="script_main.js"></script>
+    <script src="scripts/config.js"></script>
+    <script src="scripts/script_main.js"></script>
     
     <script>
     // Обработчики модальных окон для главной страницы
