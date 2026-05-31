@@ -120,11 +120,13 @@ class CommunityManager {
             return;
         }
         
+        const isAdmin = this.currentUser && this.currentUser.is_admin;
+        
         postsContainer.innerHTML = this.posts.map(post => `
             <div class="post-card" data-post-id="${post.id}">
                 <div class="post-header">
                     <div class="post-author">
-                        <img src="${this.getUserAvatar(post.username)}" 
+                        <img src="${this.getUserAvatar(post.username)}"
                              alt="${post.username}"
                              class="author-avatar"
                              onerror="this.src='icons/avatar-default.jpg'">
@@ -133,7 +135,14 @@ class CommunityManager {
                             <span class="post-time">${this.formatTime(post.created_at)}</span>
                         </div>
                     </div>
-                    <span class="post-topic ${post.topic.toLowerCase()}">${post.topic}</span>
+                    <div class="post-header-actions">
+                        <span class="post-topic ${post.topic.toLowerCase()}">${post.topic}</span>
+                        ${isAdmin ? `
+                            <button class="post-delete-btn" onclick="event.stopPropagation(); communityManager.deletePost(${post.id})" title="Удалить пост">
+                                🗑️
+                            </button>
+                        ` : ''}
+                    </div>
                 </div>
                 
                 <div class="post-content" onclick="communityManager.showPostDetail(${post.id})">
@@ -276,6 +285,8 @@ class CommunityManager {
         
         document.body.classList.add('modal-open');
         
+        const isAdmin = this.currentUser && this.currentUser.is_admin;
+        
         const modal = document.createElement('div');
         modal.id = 'postDetailModal';
         modal.className = 'post-modal-overlay';
@@ -286,7 +297,7 @@ class CommunityManager {
                 <div class="post-modal-content">
                     <div class="post-modal-header">
                         <div class="post-modal-author">
-                            <img src="${this.getUserAvatar(post.username)}" 
+                            <img src="${this.getUserAvatar(post.username)}"
                                  alt="${post.username}"
                                  class="post-modal-author-avatar"
                                  onerror="this.src='icons/avatar-default.jpg'">
@@ -299,6 +310,11 @@ class CommunityManager {
                                 </div>
                             </div>
                         </div>
+                        ${isAdmin ? `
+                            <button class="post-modal-delete-btn" onclick="communityManager.deletePost(${post.id})" title="Удалить пост">
+                                🗑️ Удалить пост
+                            </button>
+                        ` : ''}
                     </div>
                     
                     <div class="post-modal-body">
@@ -406,6 +422,58 @@ class CommunityManager {
                 await this.showPostDetail(postId);
             }
         } catch (error) {}
+    }
+
+    async deletePost(postId) {
+        if (!this.currentUser || !this.currentUser.is_admin) {
+            if (window.showNotification) {
+                window.showNotification('Доступ запрещен', 'error');
+            }
+            return;
+        }
+        
+        if (!confirm('Вы уверены, что хотите удалить этот пост? Это действие нельзя отменить.')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`${this.apiBase}/posts/${postId}`, {
+                method: 'DELETE',
+                headers: this.getAuthHeaders()
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `HTTP ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                // Закрываем модальное окно если открыто
+                const modal = document.getElementById('postDetailModal');
+                if (modal) {
+                    modal.remove();
+                    document.body.classList.remove('modal-open');
+                }
+                
+                if (window.showNotification) {
+                    window.showNotification('Пост успешно удален', 'success');
+                }
+                
+                // Перезагружаем посты
+                await this.loadPosts(this.currentFilter, this.currentSort);
+            } else {
+                throw new Error(data.message || 'Ошибка удаления поста');
+            }
+        } catch (error) {
+            console.error('❌ Ошибка удаления поста:', error);
+            if (window.showNotification) {
+                window.showNotification('Ошибка при удалении поста: ' + error.message, 'error');
+            } else {
+                alert('Ошибка при удалении поста: ' + error.message);
+            }
+        }
     }
 
     formatTime(timestamp) {
@@ -527,6 +595,11 @@ document.addEventListener('DOMContentLoaded', () => {
             .no-posts { text-align: center; padding: 50px; color: #666; }
             .create-first-post { background: #4a90e2; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-top: 15px; }
             .loading-posts { text-align: center; padding: 50px; color: #666; }
+            .post-header-actions { display: flex; align-items: center; gap: 0.5rem; }
+            .post-delete-btn { background: none; border: none; color: #ff4444; font-size: 1.1rem; cursor: pointer; padding: 4px 8px; border-radius: 4px; transition: all 0.2s; opacity: 0.6; }
+            .post-delete-btn:hover { opacity: 1; background-color: rgba(255,68,68,0.15); transform: scale(1.1); }
+            .post-modal-delete-btn { background-color: #e62429; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; white-space: nowrap; }
+            .post-modal-delete-btn:hover { background-color: #ff4444; transform: scale(1.05); }
         `;
         document.head.appendChild(style);
     }

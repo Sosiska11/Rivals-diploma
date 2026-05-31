@@ -74,6 +74,17 @@ const authenticateToken = (req, res, next) => {
     }
 };
 
+// ========== MIDDLEWARE ДЛЯ АДМИНА ==========
+const requireAdmin = (req, res, next) => {
+    if (!req.user || !req.user.is_admin) {
+        return res.status(403).json({
+            status: 'error',
+            message: 'Доступ запрещен. Требуются права администратора'
+        });
+    }
+    next();
+};
+
 // ========== ТЕСТОВЫЕ ENDPOINTS ==========
 app.get('/api/test', async (req, res) => {
     try {
@@ -162,7 +173,8 @@ app.post('/api/register', async (req, res) => {
                 id: result.insertId,
                 username: username,
                 email: email,
-                role: 'user'
+                role: 'user',
+                is_admin: 0
             },
             process.env.JWT_SECRET || 'marvel_rivals_secret_key_2025',
             { expiresIn: '30d' }
@@ -176,7 +188,8 @@ app.post('/api/register', async (req, res) => {
                 id: result.insertId,
                 username: username,
                 email: email,
-                role: 'user'
+                role: 'user',
+                is_admin: 0
             }
         });
         
@@ -237,7 +250,8 @@ app.post('/api/login', async (req, res) => {
                 id: user.id,
                 username: user.username,
                 email: user.email,
-                role: user.role
+                role: user.role,
+                is_admin: user.is_admin || 0
             },
             process.env.JWT_SECRET || 'marvel_rivals_secret_key_2025',
             { expiresIn: '30d' }
@@ -251,7 +265,8 @@ app.post('/api/login', async (req, res) => {
                 id: user.id,
                 username: user.username,
                 email: user.email,
-                role: user.role
+                role: user.role,
+                is_admin: user.is_admin || 0
             }
         });
         
@@ -276,7 +291,8 @@ app.get('/api/verify-token', authenticateToken, async (req, res) => {
                 id: req.user.id,
                 username: req.user.username,
                 email: req.user.email,
-                role: req.user.role
+                role: req.user.role,
+                is_admin: req.user.is_admin || 0
             }
         });
     } catch (error) {
@@ -770,6 +786,61 @@ app.post('/api/community/posts/:id/like', authenticateToken, async (req, res) =>
     }
 });
 
+// ========== УДАЛЕНИЕ ПОСТА (ТОЛЬКО АДМИН) ==========
+app.delete('/api/community/posts/:id', authenticateToken, requireAdmin, async (req, res) => {
+    let connection;
+    try {
+        const postId = parseInt(req.params.id);
+        
+        if (isNaN(postId)) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'Неверный ID поста'
+            });
+        }
+        
+        connection = await createConnection();
+        
+        // Проверяем существование поста
+        const [post] = await connection.execute(
+            'SELECT id, title FROM community_posts WHERE id = ?',
+            [postId]
+        );
+        
+        if (post.length === 0) {
+            return res.status(404).json({
+                status: 'error',
+                message: 'Пост не найден'
+            });
+        }
+        
+        // Удаляем связанные данные
+        await connection.execute('DELETE FROM post_likes WHERE post_id = ?', [postId]);
+        await connection.execute('DELETE FROM post_comments WHERE post_id = ?', [postId]);
+        await connection.execute('DELETE FROM community_posts WHERE id = ?', [postId]);
+        
+        console.log(`🗑️ Админ ${req.user.username} удалил пост #${postId}: "${post[0].title}"`);
+        
+        res.json({
+            status: 'success',
+            message: 'Пост успешно удален',
+            data: {
+                deletedPostId: postId,
+                deletedBy: req.user.username
+            }
+        });
+        
+    } catch (error) {
+        console.error('❌ Ошибка удаления поста:', error);
+        res.status(500).json({
+            status: 'error',
+            message: 'Ошибка удаления поста: ' + error.message
+        });
+    } finally {
+        if (connection) await connection.end();
+    }
+});
+
 // ПРОВЕРИТЬ СТАТУС ЛАЙКА
 app.get('/api/community/posts/:id/like-status', authenticateToken, async (req, res) => {
     let connection;
@@ -854,6 +925,7 @@ app.listen(PORT, () => {
     console.log('  POST /api/favorites/:id     - Добавить/удалить избранное');
     console.log('  GET  /api/community/posts   - Посты сообщества');
     console.log('  POST /api/community/posts   - Создать пост');
+    console.log('  DELETE /api/community/posts/:id - Удалить пост (админ)');
     console.log('  GET  /api/community/stats   - Статистика');
     console.log('🚀 =================================');
 });
