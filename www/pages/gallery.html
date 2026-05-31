@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,6 +10,7 @@
     <title>Marvel Rivals | Галерея сообщества</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Anonymous+Pro:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
         /* Стили для кнопки входа */
         .auth-buttons {
             display: flex;
@@ -40,7 +42,7 @@
             .auth-buttons {
                 margin-right: 1rem;
             }
-            
+
             .login-btn-header {
                 padding: 0.4rem 1rem;
                 font-size: 1rem;
@@ -48,6 +50,7 @@
         }
     </style>
 </head>
+
 <body>
     <header id="mainHeader">
         <a href="https://www.neteasegames.com/m/"><img src="../assets/images/main/NetEase-logo.png" alt=""></a>
@@ -56,7 +59,6 @@
                 <li><a href="../index.html">Главная</a></li>
                 <li><a href="heroes.html">Герои</a></li>
                 <li><a href="community.html">Сообщество</a></li>
-                <li><a href="gallery.html" class="active">Галерея</a></li>
             </ul>
         </nav>
         <div class="auth-buttons">
@@ -121,7 +123,8 @@
 
                 <!-- Арт 2: Spider-Man -->
                 <div class="art-card">
-                    <img class="art-image" src="../assets/images/gallery/spider.jpg" alt="Spider-Man арт" loading="lazy">
+                    <img class="art-image" src="../assets/images/gallery/spider.jpg" alt="Spider-Man арт"
+                        loading="lazy">
                     <div class="art-info">
                         <h3 class="art-title">Человек-паук: Новая эра</h3>
                         <div class="art-author">
@@ -153,7 +156,8 @@
 
                 <!-- Арт 4: Black Panther -->
                 <div class="art-card">
-                    <img class="art-image" src="../assets/images/gallery/panther.jpg" alt="Black Panther арт" loading="lazy">
+                    <img class="art-image" src="../assets/images/gallery/panther.jpg" alt="Black Panther арт"
+                        loading="lazy">
                     <div class="art-info">
                         <h3 class="art-title">Чёрная Пантера: Ваканда навсегда</h3>
                         <div class="art-author">
@@ -169,7 +173,8 @@
 
                 <!-- Арт 5: Scarlet Witch -->
                 <div class="art-card">
-                    <img class="art-image" src="../assets/images/gallery/scarlet.jpg" alt="Scarlet Witch арт" loading="lazy">
+                    <img class="art-image" src="../assets/images/gallery/scarlet.jpg" alt="Scarlet Witch арт"
+                        loading="lazy">
                     <div class="art-info">
                         <h3 class="art-title">Алая Ведьма: Магия хаоса</h3>
                         <div class="art-author">
@@ -246,9 +251,12 @@
         <p>© 2025 Курсовая по вселенной Marvel Rivals. Неофициальный ресурс.</p>
         <p>Все права на Marvel Rivals принадлежат Marvel и NetEase.</p>
         <div style="margin-top: 1rem;">
-            <a href="#"><img src="../assets/icons/social/icons8-твиттерх-50.png" alt="Social" style="height: 40px; margin: 0 10px;"></a>
-            <a href="#"><img src="../assets/icons/social/icons8-vk-50.png" alt="Social" style="height: 40px; margin: 0 10px;"></a>
-            <a href="#"><img src="../assets/icons/social/icons8-телеграм-50.png" alt="Social" style="height: 40px; margin: 0 10px;"></a>
+            <a href="#"><img src="../assets/icons/social/icons8-твиттерх-50.png" alt="Social"
+                    style="height: 40px; margin: 0 10px;"></a>
+            <a href="#"><img src="../assets/icons/social/icons8-vk-50.png" alt="Social"
+                    style="height: 40px; margin: 0 10px;"></a>
+            <a href="#"><img src="../assets/icons/social/icons8-телеграм-50.png" alt="Social"
+                    style="height: 40px; margin: 0 10px;"></a>
         </div>
     </footer>
 
@@ -256,7 +264,7 @@
     <div class="modal-overlay" id="registerModal" style="display: none;">
         <div class="register-modal">
             <button class="close-btn" id="closeRegisterBtn">&times;</button>
-            
+
             <div class="modal-header">
                 <h2>Присоединиться к битве</h2>
                 <p>Создайте аккаунт Marvel Rivals</p>
@@ -306,7 +314,7 @@
     <div class="modal-overlay" id="loginModal" style="display: none;">
         <div class="login-modal">
             <button class="close-btn" id="closeLoginBtn">&times;</button>
-            
+
             <div class="modal-header">
                 <h2>Возвращение героя</h2>
                 <p>Войдите в ваш аккаунт Marvel Rivals</p>
@@ -350,97 +358,98 @@
             </div>
         </div>
     </div>
-    
+
     <script src="../scripts/config.js"></script>
     <script src="../scripts/script_gallery.js"></script>
-    
+
     <script>
-    // Обработчики модальных окон
-    document.addEventListener('DOMContentLoaded', function() {
-        const openLoginBtn = document.getElementById('openLoginBtn');
-        const closeLoginBtn = document.getElementById('closeLoginBtn');
-        const closeRegisterBtn = document.getElementById('closeRegisterBtn');
-        const switchToLoginLink = document.getElementById('switchToLoginLink');
-        const switchToRegisterLink = document.getElementById('switchToRegisterLink');
-        const loginModal = document.getElementById('loginModal');
-        const registerModal = document.getElementById('registerModal');
-        
-        function openLoginModal() {
-            if (loginModal) {
-                loginModal.style.display = 'flex';
-                document.body.style.overflow = 'hidden';
-            }
-        }
-        
-        function openRegisterModal() {
-            if (registerModal) {
-                registerModal.style.display = 'flex';
-                document.body.style.overflow = 'hidden';
-            }
-        }
-        
-        function closeLoginModal() {
-            if (loginModal) {
-                loginModal.style.display = 'none';
-                document.body.style.overflow = '';
-            }
-        }
-        
-        function closeRegisterModal() {
-            if (registerModal) {
-                registerModal.style.display = 'none';
-                document.body.style.overflow = '';
-            }
-        }
-        
-        if (openLoginBtn) {
-            openLoginBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                if (window.authService && window.authService.isAuthenticated()) {
-                    window.authService.logout();
-                } else if (typeof openLoginModal === 'function') {
-                    openLoginModal();
+        // Обработчики модальных окон
+        document.addEventListener('DOMContentLoaded', function () {
+            const openLoginBtn = document.getElementById('openLoginBtn');
+            const closeLoginBtn = document.getElementById('closeLoginBtn');
+            const closeRegisterBtn = document.getElementById('closeRegisterBtn');
+            const switchToLoginLink = document.getElementById('switchToLoginLink');
+            const switchToRegisterLink = document.getElementById('switchToRegisterLink');
+            const loginModal = document.getElementById('loginModal');
+            const registerModal = document.getElementById('registerModal');
+
+            function openLoginModal() {
+                if (loginModal) {
+                    loginModal.style.display = 'flex';
+                    document.body.style.overflow = 'hidden';
                 }
-            });
-        }
-        
-        if (closeLoginBtn) closeLoginBtn.onclick = closeLoginModal;
-        if (closeRegisterBtn) closeRegisterBtn.onclick = closeRegisterModal;
-        
-        if (switchToLoginLink) {
-            switchToLoginLink.onclick = function(e) {
-                e.preventDefault();
-                closeRegisterModal();
-                setTimeout(openLoginModal, 100);
-            };
-        }
-        
-        if (switchToRegisterLink) {
-            switchToRegisterLink.onclick = function(e) {
-                e.preventDefault();
-                closeLoginModal();
-                setTimeout(openRegisterModal, 100);
-            };
-        }
-        
-        [loginModal, registerModal].forEach(modal => {
-            if (modal) {
-                modal.addEventListener('click', function(e) {
-                    if (e.target === modal) {
-                        if (modal.id === 'loginModal') closeLoginModal();
-                        if (modal.id === 'registerModal') closeRegisterModal();
+            }
+
+            function openRegisterModal() {
+                if (registerModal) {
+                    registerModal.style.display = 'flex';
+                    document.body.style.overflow = 'hidden';
+                }
+            }
+
+            function closeLoginModal() {
+                if (loginModal) {
+                    loginModal.style.display = 'none';
+                    document.body.style.overflow = '';
+                }
+            }
+
+            function closeRegisterModal() {
+                if (registerModal) {
+                    registerModal.style.display = 'none';
+                    document.body.style.overflow = '';
+                }
+            }
+
+            if (openLoginBtn) {
+                openLoginBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    if (window.authService && window.authService.isAuthenticated()) {
+                        window.authService.logout();
+                    } else if (typeof openLoginModal === 'function') {
+                        openLoginModal();
                     }
                 });
             }
-        });
-        
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closeLoginModal();
-                closeRegisterModal();
+
+            if (closeLoginBtn) closeLoginBtn.onclick = closeLoginModal;
+            if (closeRegisterBtn) closeRegisterBtn.onclick = closeRegisterModal;
+
+            if (switchToLoginLink) {
+                switchToLoginLink.onclick = function (e) {
+                    e.preventDefault();
+                    closeRegisterModal();
+                    setTimeout(openLoginModal, 100);
+                };
             }
+
+            if (switchToRegisterLink) {
+                switchToRegisterLink.onclick = function (e) {
+                    e.preventDefault();
+                    closeLoginModal();
+                    setTimeout(openRegisterModal, 100);
+                };
+            }
+
+            [loginModal, registerModal].forEach(modal => {
+                if (modal) {
+                    modal.addEventListener('click', function (e) {
+                        if (e.target === modal) {
+                            if (modal.id === 'loginModal') closeLoginModal();
+                            if (modal.id === 'registerModal') closeRegisterModal();
+                        }
+                    });
+                }
+            });
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') {
+                    closeLoginModal();
+                    closeRegisterModal();
+                }
+            });
         });
-    });
     </script>
 </body>
+
 </html>
