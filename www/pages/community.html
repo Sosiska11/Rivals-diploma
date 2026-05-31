@@ -172,6 +172,32 @@
 
         <!-- Боковая панель с топом игроков и событиями -->
         <aside class="community-sidebar">
+            <!-- Навигация сообщества (только для авторизованных) -->
+            <div class="sidebar-card community-nav-card" id="communityNavCard" style="display: none;">
+                <div class="card-header">
+                    <h3><span class="icon">🚀</span> Возможности сообщества</h3>
+                </div>
+                <div class="community-nav-content">
+                    <p>Эксклюзивные разделы для участников сообщества</p>
+                    <button class="community-nav-btn gallery-nav-btn" id="galleryNavBtn" onclick="window.location.href='gallery.html'">
+                        <span class="nav-btn-icon">🎨</span>
+                        <span class="nav-btn-text">
+                            <span class="nav-btn-title">Галерея сообщества</span>
+                            <span class="nav-btn-desc">Рисунки недели и арты игроков</span>
+                        </span>
+                        <span class="nav-btn-arrow">→</span>
+                    </button>
+                    <button class="community-nav-btn events-nav-btn" id="eventsNavBtn" onclick="window.location.href='community-events.html'">
+                        <span class="nav-btn-icon">🏆</span>
+                        <span class="nav-btn-text">
+                            <span class="nav-btn-title">Турниры и события</span>
+                            <span class="nav-btn-desc">Участвуйте в турнирах и следите за событиями</span>
+                        </span>
+                        <span class="nav-btn-arrow">→</span>
+                    </button>
+                </div>
+            </div>
+
             <!-- Топ игроков -->
             <div class="sidebar-card">
                 <div class="card-header">
@@ -292,32 +318,6 @@
                     </button>
                     <button class="create-team-btn" id="createTeamBtn">
                         <a href="https://t.me/marvelrivals_team" style="text-decoration: none; color: white;">Создать команду</a>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Навигация сообщества (только для авторизованных) -->
-            <div class="sidebar-card community-nav-card" id="communityNavCard" style="display: none;">
-                <div class="card-header">
-                    <h3><span class="icon">🚀</span> Возможности сообщества</h3>
-                </div>
-                <div class="community-nav-content">
-                    <p>Эксклюзивные разделы для участников сообщества</p>
-                    <button class="community-nav-btn gallery-nav-btn" id="galleryNavBtn" onclick="window.location.href='gallery.html'">
-                        <span class="nav-btn-icon">🎨</span>
-                        <span class="nav-btn-text">
-                            <span class="nav-btn-title">Галерея сообщества</span>
-                            <span class="nav-btn-desc">Рисунки недели и арты игроков</span>
-                        </span>
-                        <span class="nav-btn-arrow">→</span>
-                    </button>
-                    <button class="community-nav-btn events-nav-btn" id="eventsNavBtn" onclick="window.location.href='community-events.html'">
-                        <span class="nav-btn-icon">🏆</span>
-                        <span class="nav-btn-text">
-                            <span class="nav-btn-title">Турниры и события</span>
-                            <span class="nav-btn-desc">Скоро</span>
-                        </span>
-                        <span class="nav-btn-arrow">→</span>
                     </button>
                 </div>
             </div>
