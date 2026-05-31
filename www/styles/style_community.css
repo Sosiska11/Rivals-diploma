@@ -809,6 +809,160 @@
     color: white;
 }
 
+/* Навигация сообщества (только для авторизованных) */
+.community-nav-card {
+    background: linear-gradient(135deg, #1a1a2e 0%, #222 100%);
+    border: 1px solid #4a90e2;
+    position: relative;
+    overflow: hidden;
+}
+
+.community-nav-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(74, 144, 226, 0.05) 0%, transparent 60%);
+    animation: navCardGlow 4s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes navCardGlow {
+    0%, 100% { transform: scale(1); opacity: 0.5; }
+    50% { transform: scale(1.1); opacity: 1; }
+}
+
+.community-nav-content p {
+    color: #aaa;
+    font-size: 0.9rem;
+    margin-bottom: 1.2rem;
+    text-align: center;
+}
+
+.community-nav-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    margin-bottom: 0.8rem;
+    background-color: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-align: left;
+    color: white;
+    font-family: 'Anonymous Pro', monospace;
+    position: relative;
+    overflow: hidden;
+}
+
+.community-nav-btn:last-child {
+    margin-bottom: 0;
+}
+
+.community-nav-btn:hover {
+    background-color: #2a2a2a;
+    border-color: #4a90e2;
+    transform: translateX(5px);
+    box-shadow: 0 4px 15px rgba(74, 144, 226, 0.2);
+}
+
+.community-nav-btn:active {
+    transform: translateX(3px) scale(0.98);
+}
+
+.nav-btn-icon {
+    font-size: 1.8rem;
+    flex-shrink: 0;
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(74, 144, 226, 0.1);
+    border-radius: 10px;
+    transition: all 0.3s;
+}
+
+.community-nav-btn:hover .nav-btn-icon {
+    background: rgba(74, 144, 226, 0.2);
+    transform: scale(1.1);
+}
+
+.nav-btn-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.nav-btn-title {
+    font-size: 1rem;
+    font-weight: bold;
+    color: white;
+}
+
+.nav-btn-desc {
+    font-size: 0.8rem;
+    color: #888;
+}
+
+.community-nav-btn:hover .nav-btn-title {
+    color: #4a90e2;
+}
+
+.nav-btn-arrow {
+    font-size: 1.2rem;
+    color: #4a90e2;
+    opacity: 0;
+    transform: translateX(-10px);
+    transition: all 0.3s;
+}
+
+.community-nav-btn:hover .nav-btn-arrow {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* Специфичные стили для кнопок */
+.gallery-nav-btn:hover {
+    border-color: #e62429;
+    box-shadow: 0 4px 15px rgba(230, 36, 41, 0.2);
+}
+
+.gallery-nav-btn:hover .nav-btn-title {
+    color: #e62429;
+}
+
+.gallery-nav-btn:hover .nav-btn-icon {
+    background: rgba(230, 36, 41, 0.15);
+}
+
+.gallery-nav-btn .nav-btn-arrow {
+    color: #e62429;
+}
+
+.events-nav-btn:hover {
+    border-color: #ffd700;
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.15);
+}
+
+.events-nav-btn:hover .nav-btn-title {
+    color: #ffd700;
+}
+
+.events-nav-btn:hover .nav-btn-icon {
+    background: rgba(255, 215, 0, 0.15);
+}
+
+.events-nav-btn .nav-btn-arrow {
+    color: #ffd700;
+}
+
 /* Анимации */
 @keyframes pulse {
     0%, 100% { opacity: 1; }

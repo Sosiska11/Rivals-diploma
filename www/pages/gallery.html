@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../styles/style_main.css">
+    <link rel="stylesheet" href="../styles/style_modal.css">
+    <link rel="stylesheet" href="../styles/style_gallery.css">
+    <title>Marvel Rivals | Галерея сообщества</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Anonymous+Pro:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+        /* Стили для кнопки входа */
+        .auth-buttons {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-left: auto;
+            margin-right: 2rem;
+        }
+
+        .login-btn-header {
+            background-color: transparent;
+            color: white;
+            border: 2px solid #4a90e2;
+            padding: 0.5rem 1.2rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Bebas Neue', Arial, sans-serif;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .login-btn-header:hover {
+            background-color: #4a90e2;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .auth-buttons {
+                margin-right: 1rem;
+            }
+            
+            .login-btn-header {
+                padding: 0.4rem 1rem;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header id="mainHeader">
+        <a href="https://www.neteasegames.com/m/"><img src="../assets/images/main/NetEase-logo.png" alt=""></a>
+        <nav>
+            <ul>
+                <li><a href="../index.html">Главная</a></li>
+                <li><a href="heroes.html">Герои</a></li>
+                <li><a href="community.html">Сообщество</a></li>
+                <li><a href="gallery.html" class="active">Галерея</a></li>
+            </ul>
+        </nav>
+        <div class="auth-buttons">
+            <button class="login-btn-header" id="openLoginBtn">Войти</button>
+        </div>
+
+        <div class="burger-menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </header>
+
+    <!-- Hero Section Галереи -->
+    <section class="gallery-hero">
+        <div class="hero-overlay"></div>
+        <div class="gallery-hero-content">
+            <h1>Галерея <span class="highlight">сообщества</span></h1>
+            <p>Лучшие рисунки и арты по мотивам Marvel Rivals, созданные игроками со всего мира.</p>
+            <div class="gallery-stats">
+                <div class="gallery-stat">
+                    <div class="gallery-stat-number">150+</div>
+                    <div class="gallery-stat-label">Всего работ</div>
+                </div>
+                <div class="gallery-stat">
+                    <div class="gallery-stat-number">12</div>
+                    <div class="gallery-stat-label">Работ недели</div>
+                </div>
+                <div class="gallery-stat">
+                    <div class="gallery-stat-number">45</div>
+                    <div class="gallery-stat-label">Художников</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Основной контент галереи -->
+    <main class="gallery-container">
+        <!-- Рисунки недели -->
+        <section class="weekly-section">
+            <div class="section-header">
+                <h2><span class="icon">🎨</span> Рисунки недели</h2>
+                <p>Лучшие работы, отобранные сообществом за эту неделю</p>
+            </div>
+
+            <div class="weekly-grid">
+                <!-- Арт 1: Iron Man -->
+                <div class="art-card">
+                    <img class="art-image" src="../assets/images/gallery/iron.jpg" alt="Iron Man арт" loading="lazy">
+                    <div class="art-info">
+                        <h3 class="art-title">Железный человек в бою</h3>
+                        <div class="art-author">
+                            <span class="art-author-label">Автор:</span>
+                            <span class="art-author-name">IronFan_Art</span>
+                        </div>
+                        <div class="art-meta">
+                            <span class="art-likes">❤️ 124</span>
+                            <span class="art-views">👁️ 1.2K</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Арт 2: Spider-Man -->
+                <div class="art-card">
+                    <img class="art-image" src="../assets/images/gallery/spider.jpg" alt="Spider-Man арт" loading="lazy">
+                    <div class="art-info">
+                        <h3 class="art-title">Человек-паук: Новая эра</h3>
+                        <div class="art-author">
+                            <span class="art-author-label">Автор:</span>
+                            <span class="art-author-name">WebSlinger_Art</span>
+                        </div>
+                        <div class="art-meta">
+                            <span class="art-likes">❤️ 98</span>
+                            <span class="art-views">👁️ 856</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Арт 3: Thor -->
+                <div class="art-card">
+                    <img class="art-image" src="../assets/images/gallery/thor.jpg" alt="Thor арт" loading="lazy">
+                    <div class="art-info">
+                        <h3 class="art-title">Тор: Властелин грома</h3>
+                        <div class="art-author">
+                            <span class="art-author-label">Автор:</span>
+                            <span class="art-author-name">MjolnirMaster</span>
+                        </div>
+                        <div class="art-meta">
+                            <span class="art-likes">❤️ 156</span>
+                            <span class="art-views">👁️ 2.1K</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Арт 4: Black Panther -->
+                <div class="art-card">
+                    <img class="art-image" src="../assets/images/gallery/panther.jpg" alt="Black Panther арт" loading="lazy">
+                    <div class="art-info">
+                        <h3 class="art-title">Чёрная Пантера: Ваканда навсегда</h3>
+                        <div class="art-author">
+                            <span class="art-author-label">Автор:</span>
+                            <span class="art-author-name">WakandaForever</span>
+                        </div>
+                        <div class="art-meta">
+                            <span class="art-likes">❤️ 87</span>
+                            <span class="art-views">👁️ 743</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Арт 5: Scarlet Witch -->
+                <div class="art-card">
+                    <img class="art-image" src="../assets/images/gallery/scarlet.jpg" alt="Scarlet Witch арт" loading="lazy">
+                    <div class="art-info">
+                        <h3 class="art-title">Алая Ведьма: Магия хаоса</h3>
+                        <div class="art-author">
+                            <span class="art-author-label">Автор:</span>
+                            <span class="art-author-name">ChaosMagic_Art</span>
+                        </div>
+                        <div class="art-meta">
+                            <span class="art-likes">❤️ 112</span>
+                            <span class="art-views">👁️ 1.5K</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Арт 6: Venom -->
+                <div class="art-card">
+                    <img class="art-image" src="../assets/images/gallery/venom.jpg" alt="Venom арт" loading="lazy">
+                    <div class="art-info">
+                        <h3 class="art-title">Веном: Кошмар на улице</h3>
+                        <div class="art-author">
+                            <span class="art-author-label">Автор:</span>
+                            <span class="art-author-name">SymbioteFan</span>
+                        </div>
+                        <div class="art-meta">
+                            <span class="art-likes">❤️ 203</span>
+                            <span class="art-views">👁️ 2.8K</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Арт 7: Hela -->
+                <div class="art-card">
+                    <img class="art-image" src="../assets/images/gallery/hela.jpg" alt="Hela арт" loading="lazy">
+                    <div class="art-info">
+                        <h3 class="art-title">Хела: Богиня смерти</h3>
+                        <div class="art-author">
+                            <span class="art-author-label">Автор:</span>
+                            <span class="art-author-name">HelArt_Studio</span>
+                        </div>
+                        <div class="art-meta">
+                            <span class="art-likes">❤️ 67</span>
+                            <span class="art-views">👁️ 534</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Арт 8: Magneto -->
+                <div class="art-card">
+                    <img class="art-image" src="../assets/images/gallery/magneto.jpg" alt="Magneto арт" loading="lazy">
+                    <div class="art-info">
+                        <h3 class="art-title">Магнето: Повелитель магнетизма</h3>
+                        <div class="art-author">
+                            <span class="art-author-label">Автор:</span>
+                            <span class="art-author-name">MagneticArt</span>
+                        </div>
+                        <div class="art-meta">
+                            <span class="art-likes">❤️ 91</span>
+                            <span class="art-views">👁️ 967</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Пагинация -->
+        <div class="gallery-pagination">
+            <button class="pagination-btn active">1</button>
+            <button class="pagination-btn">2</button>
+            <button class="pagination-btn">3</button>
+            <button class="pagination-btn">→</button>
+        </div>
+    </main>
+
+    <footer>
+        <p>© 2025 Курсовая по вселенной Marvel Rivals. Неофициальный ресурс.</p>
+        <p>Все права на Marvel Rivals принадлежат Marvel и NetEase.</p>
+        <div style="margin-top: 1rem;">
+            <a href="#"><img src="../assets/icons/social/icons8-твиттерх-50.png" alt="Social" style="height: 40px; margin: 0 10px;"></a>
+            <a href="#"><img src="../assets/icons/social/icons8-vk-50.png" alt="Social" style="height: 40px; margin: 0 10px;"></a>
+            <a href="#"><img src="../assets/icons/social/icons8-телеграм-50.png" alt="Social" style="height: 40px; margin: 0 10px;"></a>
+        </div>
+    </footer>
+
+    <!-- Модальное окно регистрации -->
+    <div class="modal-overlay" id="registerModal" style="display: none;">
+        <div class="register-modal">
+            <button class="close-btn" id="closeRegisterBtn">&times;</button>
+            
+            <div class="modal-header">
+                <h2>Присоединиться к битве</h2>
+                <p>Создайте аккаунт Marvel Rivals</p>
+            </div>
+
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="username">Игровой id</label>
+                    <input type="text" id="username" placeholder="Введите ваше имя" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Электронная почта</label>
+                    <input type="email" id="email" placeholder="your@email.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Пароль</label>
+                    <input type="password" id="password" placeholder="Создайте надежный пароль" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmPassword">Подтвердите пароль</label>
+                    <input type="password" id="confirmPassword" placeholder="Повторите пароль" required>
+                </div>
+
+                <button type="submit" class="register-btn">Зарегистрироваться</button>
+            </form>
+
+            <div class="divider">
+                <span>или</span>
+            </div>
+
+            <div class="social-login">
+                <button class="social-btn"><img src="../assets/icons/social/icons8-vk-50.png" alt=""></button>
+                <button class="social-btn"><img src="../assets/icons/social/icons8-твиттерх-50.png" alt=""></button>
+                <button class="social-btn"><img src="../assets/icons/social/icons8-телеграм-50.png" alt=""></button>
+            </div>
+
+            <div class="login-link">
+                Уже есть аккаунт? <a href="#" id="switchToLoginLink">Войти</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно входа -->
+    <div class="modal-overlay" id="loginModal" style="display: none;">
+        <div class="login-modal">
+            <button class="close-btn" id="closeLoginBtn">&times;</button>
+            
+            <div class="modal-header">
+                <h2>Возвращение героя</h2>
+                <p>Войдите в ваш аккаунт Marvel Rivals</p>
+            </div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">Электронная почта</label>
+                    <input type="email" id="loginEmail" placeholder="your@email.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="loginPassword">Пароль</label>
+                    <input type="password" id="loginPassword" placeholder="Введите ваш пароль" required>
+                </div>
+
+                <div class="form-options">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="rememberMe">
+                        <span class="checkmark"></span>
+                        Запомнить меня
+                    </label>
+                    <a href="#" class="forgot-password">Забыли пароль?</a>
+                </div>
+
+                <button type="submit" class="login-btn">Войти в игру</button>
+            </form>
+
+            <div class="divider">
+                <span>или войдите через</span>
+            </div>
+
+            <div class="social-login">
+                <button class="social-btn">G</button>
+                <button class="social-btn">F</button>
+                <button class="social-btn">S</button>
+            </div>
+
+            <div class="register-link">
+                Нет аккаунта? <a href="#" id="switchToRegisterLink">Присоединиться к битве</a>
+            </div>
+        </div>
+    </div>
+    
+    <script src="../scripts/config.js"></script>
+    <script src="../scripts/script_gallery.js"></script>
+    
+    <script>
+    // Обработчики модальных окон
+    document.addEventListener('DOMContentLoaded', function() {
+        const openLoginBtn = document.getElementById('openLoginBtn');
+        const closeLoginBtn = document.getElementById('closeLoginBtn');
+        const closeRegisterBtn = document.getElementById('closeRegisterBtn');
+        const switchToLoginLink = document.getElementById('switchToLoginLink');
+        const switchToRegisterLink = document.getElementById('switchToRegisterLink');
+        const loginModal = document.getElementById('loginModal');
+        const registerModal = document.getElementById('registerModal');
+        
+        function openLoginModal() {
+            if (loginModal) {
+                loginModal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            }
+        }
+        
+        function openRegisterModal() {
+            if (registerModal) {
+                registerModal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            }
+        }
+        
+        function closeLoginModal() {
+            if (loginModal) {
+                loginModal.style.display = 'none';
+                document.body.style.overflow = '';
+            }
+        }
+        
+        function closeRegisterModal() {
+            if (registerModal) {
+                registerModal.style.display = 'none';
+                document.body.style.overflow = '';
+            }
+        }
+        
+        if (openLoginBtn) {
+            openLoginBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (window.authService && window.authService.isAuthenticated()) {
+                    window.authService.logout();
+                } else if (typeof openLoginModal === 'function') {
+                    openLoginModal();
+                }
+            });
+        }
+        
+        if (closeLoginBtn) closeLoginBtn.onclick = closeLoginModal;
+        if (closeRegisterBtn) closeRegisterBtn.onclick = closeRegisterModal;
+        
+        if (switchToLoginLink) {
+            switchToLoginLink.onclick = function(e) {
+                e.preventDefault();
+                closeRegisterModal();
+                setTimeout(openLoginModal, 100);
+            };
+        }
+        
+        if (switchToRegisterLink) {
+            switchToRegisterLink.onclick = function(e) {
+                e.preventDefault();
+                closeLoginModal();
+                setTimeout(openRegisterModal, 100);
+            };
+        }
+        
+        [loginModal, registerModal].forEach(modal => {
+            if (modal) {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        if (modal.id === 'loginModal') closeLoginModal();
+                        if (modal.id === 'registerModal') closeRegisterModal();
+                    }
+                });
+            }
+        });
+        
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeLoginModal();
+                closeRegisterModal();
+            }
+        });
+    });
+    </script>
+</body>
+</html>

@@ -567,6 +567,12 @@ class CommunityManager {
                 guestMessage.style.display = 'block';
             }
         }
+
+        // Показываем блок навигации сообщества только авторизованным пользователям
+        const communityNavCard = document.getElementById('communityNavCard');
+        if (communityNavCard) {
+            communityNavCard.style.display = this.currentUser ? 'block' : 'none';
+        }
     }
 
     focusPostInput() {
