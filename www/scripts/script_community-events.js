@@ -57,15 +57,15 @@ class EventsManager {
                 status: 'upcoming',
                 date: '2026-06-15T20:00:00',
                 prize: '25 000 ₽',
-                format: '5v5',
+                format: '6v6',
                 mode: 'Захват точек',
                 players: 32,
                 maxPlayers: 64,
                 registered: 28,
-                banner: '../assets/images/main/season.jpg',
+                banner: '../assets/images/community/season.jpg',
                 type: 'tournament',
                 rules: [
-                    'Формат 5v5, матчи до 2 побед',
+                    'Формат 6v6, матчи до 2 побед',
                     'Обязательное присутствие в Discord',
                     'Запрещены читы и эксплойты',
                     'Все герои доступны для выбора'
@@ -79,15 +79,15 @@ class EventsManager {
                 status: 'upcoming',
                 date: '2026-06-28T18:00:00',
                 prize: '100 000 ₽',
-                format: '5v5',
+                format: '6v6',
                 mode: 'Смешанный',
                 players: 128,
                 maxPlayers: 128,
                 registered: 97,
-                banner: '../assets/images/main/doom.jpg',
+                banner: '../assets/images/community/doom.jpg',
                 type: 'tournament',
                 rules: [
-                    'Формат 5v5, групповая стадия + плей-офф',
+                    'Формат 6v6, групповая стадия + плей-офф',
                     'Обязательная регистрация команды',
                     'Матчи проходят по выходным',
                     'Стримы всех матчей на Twitch'
@@ -106,7 +106,7 @@ class EventsManager {
                 players: 16,
                 maxPlayers: 32,
                 registered: 32,
-                banner: '../assets/images/main/asgard.jpg',
+                banner: '../assets/images/community/asgard.jpg',
                 type: 'tournament',
                 rules: [
                     'Формат 1v1, матчи до 3 побед',
@@ -128,7 +128,7 @@ class EventsManager {
                 players: 24,
                 maxPlayers: 24,
                 registered: 24,
-                banner: '../assets/images/main/marvel-rivals-bg.png',
+                banner: '../assets/images/community/season.jpg',
                 type: 'tournament',
                 rules: [
                     'Формат 3v3',
@@ -144,15 +144,15 @@ class EventsManager {
                 status: 'past',
                 date: '2026-05-10T17:00:00',
                 prize: '5 000 ₽',
-                format: '5v5',
+                format: '6v6',
                 mode: 'Эскорт',
                 players: 40,
                 maxPlayers: 40,
                 registered: 40,
-                banner: '../assets/images/main/season.jpg',
+                banner: '../assets/images/community/asgard.jpg',
                 type: 'tournament',
                 rules: [
-                    'Формат 5v5',
+                    'Формат 6v6',
                     'Дружеские матчи без строгих правил',
                     'Приз за участие — всем!'
                 ],
@@ -170,7 +170,7 @@ class EventsManager {
                 players: 0,
                 maxPlayers: 0,
                 registered: 0,
-                banner: '../assets/images/main/doom.jpg',
+                banner: '../assets/images/community/doom.jpg',
                 type: 'stream',
                 rules: [
                     'Стрим на Twitch и YouTube',
@@ -319,8 +319,8 @@ class EventsManager {
         return `
             <div class="tournament-card ${isPast ? 'past' : ''}" onclick="eventsManager.showTournamentDetail(${t.id})">
                 <div class="tournament-card-banner">
-                    <div class="banner-bg" style="background: linear-gradient(135deg, #1a1a2e, #16213e);">
-                        <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:4rem;opacity:0.3;">
+                    <div class="banner-bg" style="background-image: url('${t.banner}'); background-size: cover; background-position: center;">
+                        <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:4rem;opacity:0.15;">
                             ${t.type === 'stream' ? '🎙️' : '🏆'}
                         </div>
                     </div>
