@@ -4,7 +4,7 @@ class CommunityManager {
     constructor() {
         this.currentUser = null;
         this.posts = [];
-        const apiUrl = window.apiBaseUrl || 'http://marvel-rivals-new.com:3001/api';
+        const apiUrl = window.apiBaseUrl || (typeof AUTH_API_BASE_URL !== 'undefined' ? AUTH_API_BASE_URL : 'http://localhost:3001/api');
         this.apiBase = `${apiUrl}/community`;
         this.currentFilter = 'all';
         this.currentSort = 'newest';
